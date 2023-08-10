@@ -1,0 +1,21 @@
+---
+
+name: Get Pull Request Description
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  get-description:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Extract dependent PR
+        uses: ./
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          verbose: true
+...
