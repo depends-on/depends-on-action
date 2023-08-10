@@ -1,0 +1,20 @@
+---
+
+name: 'PR dependency management'
+description: 'Manage dependency between PR using the Depends-On keyword.'
+author: 'Frederic Lepied'
+branding:
+  icon: eye
+  color: blue
+inputs:
+  token:
+    description: 'Github token'
+    mandatory: true
+  verbose:
+    description: 'Set to true to get verbose output'
+    default: false
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
+
+...
