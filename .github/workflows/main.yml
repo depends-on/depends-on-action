@@ -1,21 +1,23 @@
 ---
 
-name: Get Pull Request Description
+name: Get Pull Request Dependencies
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  get-description:
+  test-inject-dependencies:
     runs-on: ubuntu-latest
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Extract dependent PR
+      - name: Inject dependent PR
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           verbose: true
+
 ...

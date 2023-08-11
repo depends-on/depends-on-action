@@ -9819,16 +9819,28 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+// -*- javascript -*-
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 const { execSync } = __nccwpck_require__(2081);
 const url = __nccwpck_require__(7310);
+
+function myExecSync(cmd) {
+  console.log(`+ ${cmd}`);
+  const output = execSync(cmd, { encoding: 'utf-8' });
+  console.log(`${output}`);
+  return output;
+}
 
 async function run() {
   try {
     const token = core.getInput('token');
     const context = github.context;
     const prNumber = context.payload.pull_request.number;
+
+    console.log(`Pull Request number: ${prNumber}`);
+
+    myExecSync('pwd');
 
     const octokit = github.getOctokit(token);
 
@@ -9851,6 +9863,11 @@ async function run() {
 
     console.log(`All: ${dependsOnStrings}`);
 
+    // Match Main-Dir: for debugging purpose
+    const mainDirRes = mainPR.body.match(/Main-Dir:\s*(.*)/i);
+
+    const mainDir = mainDirRes ? mainDirRes[1] : '.';
+
     if (!dependsOnStrings) {
       console.log('No Depends-On strings found.');
       return;
@@ -9865,7 +9882,7 @@ async function run() {
       // Construct the URL for cloning the repository
       const repoUrl = `https://github.com/${owner}/${repo}.git`;
 
-      execSync(`cd .. && git clone ${repoUrl}`);
+      myExecSync(`cd .. && git clone ${repoUrl}`);
 
       // Get details of the dependent PR
       const { data: dependsOnPR } = await octokit.rest.pulls.get({
@@ -9877,11 +9894,11 @@ async function run() {
       if (dependsOnPR.merged) {
         console.log(`Dependent Pull Request ${prNumber} in ${owner}/${repo} is already merged.`);
       } else {
-        execSync(`cd ../${repo} && git fetch origin pull/${prNumber}/head:pr-${prNumber} && git checkout pr-${prNumber}`);
+        myExecSync(`cd ../${repo} && git fetch origin pull/${prNumber}/head:pr-${prNumber} && git checkout pr-${prNumber}`);
       }
-
       console.log(`Dependent Pull Request ${prNumber} in ${owner}/${repo} cloned to ../${repo}`);
     }
+    myExecSync(`cd ${mainDir} && ${__dirname}/../depends-on`);
   } catch (error) {
     core.setFailed(error.message);
   }
