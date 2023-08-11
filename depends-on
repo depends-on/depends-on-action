@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+
+"""Stage2: inject the local dependencies into the main changeset.
+"""
+
+import os
+import re
+import sys
+
+
+def extract_repo_name(url):
+    "Return the repository name from a git URL in the form github.com/<org>/<repo>."
+    if not url:
+        return url
+    if url.endswith(".git"):
+        url = url[:-4]
+    return "/".join(url.split("/")[2:5])
+
+
+def get_remote_url(proj_dir):
+    "Return the remote URL of the git repository in proj_dir."
+    origin_url = os.popen(f"cd {proj_dir} && git remote get-url origin").read().strip()
+    # convert ssh to https
+    if origin_url.startswith("git@"):
+        origin_url = origin_url.replace(":", "/", 1)
+        origin_url = origin_url.replace("git@", "https://")
+    return origin_url
+
+
+def directories(top_dir, main_dir):
+    "Return a dict of {repo_name: dir} for all git repositories in top_dir."
+    ret = {}
+    for d in os.listdir(top_dir):
+        key_dir = os.path.join(top_dir, d)
+        if os.path.isdir(key_dir) and key_dir != main_dir:
+            ret[extract_repo_name(get_remote_url(key_dir))] = key_dir
+    return ret
+
+
+def process_golang(main_dir, dirs):
+    "Add replace directives in go.mod for the local dependencies."
+    if not os.path.exists("go.mod"):
+        return False
+    # get the list of github.com/... dependencies that are in the local dependencies
+    github_mods = []
+    with open("go.mod", "r") as in_stream:
+        for line in in_stream.readlines():
+            match = re.match(r"^(require)?\s*(github.com/.*?)\s", line)
+            if match and match.group(2) in dirs:
+                github_mods.append(match.group(2))
+    # add the replace directives to go.mod for the local dependencies
+    nb_replace = 0
+    with open("go.mod", "a") as out_stream:
+        for mod in github_mods:
+            if mod in dirs:
+                print(
+                    f"Adding replace directive in go.mod for {mod} => {dirs[mod]}",
+                    file=sys.stderr,
+                )
+                # do not use "go mod edit -replace" as go could be not installed at this stage
+                out_stream.write(f"replace {mod} => {dirs[mod]}\n")
+                nb_replace += 1
+    return nb_replace > 0
+
+
+def main():
+    "Main function."
+    main_dir = os.getcwd()
+    top_dir = os.path.dirname(main_dir)
+
+    dirs = directories(top_dir, main_dir)
+    print(
+        f"{main_dir=} {top_dir=} {dirs=} called from {__file__}!",
+        file=sys.stderr,
+    )
+
+    process_golang(main_dir, dirs)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+# depends-on ends here

@@ -12,7 +12,12 @@ The action is extracting all the Pull Requests that are declared in
 the description of the Pull Request with `Depends-On: <PR url>`
 syntax.
 
-It then injects the needed changes in the code to use the other Pull Requests. [to be done]
+It then injects the needed changes in the code to use the other Pull Requests.
+
+For a go lang change, it is adding replace directives for the
+dependencies inside the `go.mod` file. It is not running `go mod tidy`
+and it is expecting it to be run by your build automation in a later
+stage.
 
 ## Enabling the action
 
@@ -49,12 +54,13 @@ jobs:
 
 ## Roadmap
 
-- stage 1: javascript program to extract the dependencies.
-- stage 2: python program to inject the dependencies into the main PR. Will be called from stage 1 or standalone.
+- stage 1: [javascript program](index.js) to extract the dependencies.
+- stage 2: [python program](depends-on) to inject the dependencies
+  into the main PR. Called from stage 1 or standalone.
 - stage 3: check before merge. Could be a new action.
 
 - [x] [stage 1: extract public PR](https://github.com/depends-on/depends-on-action/issues/2)
-- [ ] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
+- [x] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
 - [ ] [stage 2: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 1: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
