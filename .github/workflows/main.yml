@@ -14,10 +14,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Inject dependent PR
+      - name: Inject dependent Pull Requests
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          verbose: true
 
 ...

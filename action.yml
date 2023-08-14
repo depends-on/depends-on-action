@@ -10,9 +10,10 @@ inputs:
   token:
     description: 'Github token'
     mandatory: true
-  verbose:
-    description: 'Set to true to get verbose output'
+  check-unmerged-pr:
+    description: 'Set to true to stop if there are unmerged PR'
     default: false
+    type: boolean
 runs:
   using: 'node16'
   main: 'dist/index.js'
