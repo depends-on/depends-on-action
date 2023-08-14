@@ -14,10 +14,17 @@ syntax.
 
 It then injects the needed changes in the code to use the other Pull Requests.
 
-For a go lang change, it is adding replace directives for the
+### Go lang
+
+For a go lang change, the action is adding replace directives for the
 dependencies inside the `go.mod` file. It is not running `go mod tidy`
 and it is expecting it to be run by your build automation in a later
 stage.
+
+### Python
+
+For a Python change, the action is replacing entries in
+`requirements.txt` with a `-e <local change>`.
 
 ## Enabling the action
 
@@ -79,11 +86,11 @@ jobs:
 - [x] [stage 1: extract public PR](https://github.com/depends-on/depends-on-action/issues/2)
 - [x] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
 - [x] [stage 3: prevent merging if a dependent PR isn't merged](https://github.com/depends-on/depends-on-action/issues/10)
+- [x] [stage 2: python support](https://github.com/depends-on/depends-on-action/issues/8)
 - [ ] [stage 2: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 1: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
 - [ ] [stage 1: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
-- [ ] [stage 2: python support](https://github.com/depends-on/depends-on-action/issues/8)
 - [ ] [stage 2: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
 - [ ] [stage 2: rust support](https://github.com/depends-on/depends-on-action/issues/11)
 - [ ] [stage 2: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
