@@ -63,6 +63,41 @@ def process_golang(main_dir, dirs):
     return nb_replace > 0
 
 
+def process_python(main_dir, dirs):
+    "Replace modeules in requirements.txt for the local dependencies."
+    if not os.path.exists("requirements.txt"):
+        return False
+    # get the list of python packages from local dependencies
+    python_mods = {}
+    for d in dirs:
+        setup_py = os.path.join(dirs[d], "setup.py")
+        if os.path.exists(setup_py):
+            with open(setup_py, "r") as in_stream:
+                for line in in_stream.readlines():
+                    match = re.match(r"^\s*name\s*=\s*['\"](.*?)['\"]\s*,", line)
+                    if match:
+                        python_mods[match.group(1)] = dirs[d]
+                        break
+    print(f"{python_mods=}", file=sys.stderr)
+    # replace the modules in requirements.txt
+    nb_replace = 0
+    with open("requirements.txt", "r") as in_stream:
+        with open("requirements.txt.new", "w") as out_stream:
+            for line in in_stream.readlines():
+                match = re.match(r"^\s*(\w+)", line)
+                if match and match.group(1) in python_mods:
+                    print(
+                        f"Replacing {match.group(1)} in requirements.txt with {python_mods[match.group(1)]}",
+                        file=sys.stderr,
+                    )
+                    out_stream.write(f"-e {python_mods[match.group(1)]}\n")
+                    nb_replace += 1
+                else:
+                    out_stream.write(line)
+    os.rename("requirements.txt.new", "requirements.txt")
+    return nb_replace > 0
+
+
 def main():
     "Main function."
     main_dir = os.getcwd()
@@ -75,6 +110,7 @@ def main():
     )
 
     process_golang(main_dir, dirs)
+    process_python(main_dir, dirs)
 
 
 if __name__ == "__main__":
