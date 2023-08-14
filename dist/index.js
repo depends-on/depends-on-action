@@ -9842,6 +9842,10 @@ async function run() {
     const description = mainPR.body;
     console.log(`Pull Request Description: ${description}`);
 
+    if (!description) {
+      return
+    }
+
     // Match all "Depends-On" lines and process each one
     const dependsOnStrings = mainPR.body.match(/Depends-On:\s*(.*)/gi);
 
