@@ -38,33 +38,31 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   validate-tests:
-    name: Run tests
     runs-on: ubuntu-latest
     steps:
 
-    - name: Checkout code
-      uses: actions/checkout@master
+      - name: Checkout code
+        uses: actions/checkout@master
 
-    - name: Extract dependent Pull Requests
-      uses: depends-on/depends-on-action@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract dependent Pull Requests
+        uses: depends-on/depends-on-action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    <your usual actions here>
+      # <your usual actions here>
 
   check-all-dependencies-are-merged:
-    name: Run tests
     runs-on: ubuntu-latest
     steps:
 
-    - name: Checkout code
-      uses: actions/checkout@master
+      - name: Checkout code
+        uses: actions/checkout@master
 
-    - name: Check all dependent Pull Requests are mergd
-      uses: depends-on/depends-on-action@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        check-unmerged-pr: true
+      - name: Check all dependent Pull Requests are merged
+        uses: depends-on/depends-on-action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          check-unmerged-pr: true
 ...
 ```
 
@@ -73,7 +71,10 @@ jobs:
 - stage 1: [javascript program](index.js) to extract the dependencies.
 - stage 2: [python program](depends-on) to inject the dependencies
   into the main PR. Called from stage 1 or standalone.
-- stage 3: check before merge. Could be a new action.
+- stage 3: check before merge. Same action with a different argument
+  (`check-unmerged-pr: true`) called in a different pipeline to not
+  pollute the status of the build but still indicating that the change
+  cannot be merged as it is dependent on other changes.
 
 - [x] [stage 1: extract public PR](https://github.com/depends-on/depends-on-action/issues/2)
 - [x] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
