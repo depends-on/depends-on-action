@@ -49,6 +49,22 @@ jobs:
       uses: depends-on/depends-on-action@main
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+
+    <your usual actions here>
+
+  check-all-dependencies-are-merged:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@master
+
+    - name: Check all dependent Pull Requests are mergd
+      uses: depends-on/depends-on-action@main
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        check-unmerged-pr: true
 ...
 ```
 
@@ -61,12 +77,12 @@ jobs:
 
 - [x] [stage 1: extract public PR](https://github.com/depends-on/depends-on-action/issues/2)
 - [x] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
+- [x] [stage 3: prevent merging if a dependent PR isn't merged](https://github.com/depends-on/depends-on-action/issues/10)
 - [ ] [stage 2: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 1: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
 - [ ] [stage 1: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 2: python support](https://github.com/depends-on/depends-on-action/issues/8)
 - [ ] [stage 2: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
-- [ ] [stage 3: prevent merging if a dependent PR isn't merged](https://github.com/depends-on/depends-on-action/issues/10)
 - [ ] [stage 2: rust support](https://github.com/depends-on/depends-on-action/issues/11)
 - [ ] [stage 2: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
