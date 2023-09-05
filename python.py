@@ -20,11 +20,11 @@ def get_modules(dirs):
     "Get the dictionary of python modules from the local dependencies."
     python_mods = {}
     for _dir in dirs:
-        name = lookup_name(os.path.join(dirs[_dir], "setup.py")) or lookup_name(
-            os.path.join(dirs[_dir], "pyproject.toml")
+        name = lookup_name(os.path.join(dirs[_dir]["path"], "setup.py")) or lookup_name(
+            os.path.join(dirs[_dir]["path"], "pyproject.toml")
         )
         if name:
-            python_mods[name] = dirs[_dir]
+            python_mods[name] = dirs[_dir]["path"]
     return python_mods
 
 
