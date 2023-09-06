@@ -24,7 +24,8 @@ stage.
 ### Python
 
 For a Python change, the action is replacing entries in
-`requirements.txt` with a `-e <local change>`.
+`requirements.txt` with a `-e <local change>` or the equivalent for
+`pyproject.toml`.
 
 ## Enabling the action
 
@@ -87,7 +88,7 @@ jobs:
 - [x] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
 - [x] [stage 3: prevent merging if a dependent PR isn't merged](https://github.com/depends-on/depends-on-action/issues/10)
 - [x] [stage 2: python support](https://github.com/depends-on/depends-on-action/issues/8)
-- [ ] [stage 2: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
+- [x] [stage 2: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
 - [ ] [stage 2: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
 - [ ] [stage 2: Container support](https://github.com/depends-on/depends-on-action/issues/17)
 - [ ] [stage 2: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
