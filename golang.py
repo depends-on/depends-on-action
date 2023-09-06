@@ -23,11 +23,11 @@ def process_golang(main_dir, dirs):
         for mod in github_mods:
             if mod in dirs:
                 print(
-                    f"Adding replace directive in go.mod for {mod} => {dirs[mod]}",
+                    f'Adding replace directive in go.mod for {mod} => {dirs[mod]["path"]}',
                     file=sys.stderr,
                 )
                 # do not use "go mod edit -replace" as go could be not installed at this stage
-                out_stream.write(f"replace {mod} => {dirs[mod]}\n")
+                out_stream.write(f'replace {mod} => {dirs[mod]["path"]}\n')
                 nb_replace += 1
     return nb_replace > 0
 

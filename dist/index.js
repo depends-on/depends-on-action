@@ -9824,6 +9824,7 @@ const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 const { execSync } = __nccwpck_require__(2081);
 const url = __nccwpck_require__(7310);
+const fs = __nccwpck_require__(7147);
 
 function myExecSync(cmd) {
   console.log(`+ ${cmd}`);
@@ -9853,11 +9854,18 @@ async function run() {
     });
 
     const description = mainPR.body;
-    console.log(`Pull Request Description: ${description}`);
+    console.log(`description: ${description}`);
 
     if (!description) {
       return
     }
+
+    const changeJson = {
+      clone_url: mainPR.head.repo.clone_url,
+      branch: mainPR.head.ref
+    };
+    fs.writeFileSync('.depends-on.json', JSON.stringify(changeJson));
+    console.log(`writing .depends-on.json: ${JSON.stringify(changeJson)}`);
 
     // Match all "Depends-On" lines and process each one
     const dependsOnStrings = mainPR.body.match(/Depends-On:\s*(.*)/gi);
@@ -9878,9 +9886,11 @@ async function run() {
 
     for (const dependsOnString of dependsOnStrings) {
       const dependsOnUrl = dependsOnString.match(/Depends-On:\s*(.*)/i)[1];
-      const parsedUrl = url.parse(dependsOnUrl);
+      const parsedUrl = new URL(dependsOnUrl);
+      const params = new URLSearchParams(parsedUrl.search);
       const [owner, repo] = parsedUrl.pathname.split('/').slice(1, 3);
       const prNumber = parsedUrl.pathname.split('/').pop();
+      const subdir = params.get('subdir');
 
       // Construct the URL for cloning the repository
       const repoUrl = `https://github.com/${owner}/${repo}.git`;
@@ -9902,6 +9912,15 @@ async function run() {
         nbUnMergedPr++;
         if (!checkUnmergedPr){
           myExecSync(`cd ../${repo} && git fetch origin pull/${prNumber}/head:pr-${prNumber} && git checkout pr-${prNumber}`);
+          var dependsOnJson = {
+            clone_url: dependsOnPR.head.repo.clone_url,
+            branch: dependsOnPR.head.ref
+          };
+          if (subdir) {
+            dependsOnJson.subdir = subdir;
+          };
+          fs.writeFileSync(`../${repo}/.depends-on.json`, JSON.stringify(dependsOnJson));
+          console.log(`writing ../${repo}/.depends-on.json: ${JSON.stringify(dependsOnJson)}`);
         }
       }
       if (!checkUnmergedPr) {
@@ -9917,6 +9936,7 @@ async function run() {
     console.log(`There are ${nbUnMergedPr} unmerged PRs`);
     myExecSync(`cd ${mainDir} && ${__dirname}/../depends-on`);
   } catch (error) {
+    console.log(error);
     core.setFailed(error.message);
   }
 }
