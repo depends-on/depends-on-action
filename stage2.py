@@ -41,7 +41,11 @@ def directories(top_dir, main_dir):
     ret = {}
     for d in os.listdir(top_dir):
         key_dir = os.path.join(top_dir, d)
-        if os.path.isdir(key_dir) and key_dir != main_dir:
+        if (
+            os.path.isdir(key_dir)
+            and key_dir != main_dir
+            and os.path.isdir(os.path.join(key_dir, ".git"))
+        ):
             info = {"topdir": top_dir, "path": top_dir}
             json_fname = os.path.join(key_dir, ".depends-on.json")
             if os.path.exists(json_fname):
@@ -72,4 +76,4 @@ def main():
 if __name__ == "__main__":
     sys.exit(main())
 
-# depends-on ends here
+# stage2.py ends here

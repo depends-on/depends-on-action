@@ -9861,80 +9861,15 @@ async function run() {
     }
 
     const changeJson = {
-      clone_url: mainPR.head.repo.clone_url,
-      branch: mainPR.head.ref
+      fork_url: mainPR.head.repo.clone_url,
+      branch: mainPR.head.ref,
+      description: description
     };
     fs.writeFileSync('.depends-on.json', JSON.stringify(changeJson));
     console.log(`writing .depends-on.json: ${JSON.stringify(changeJson)}`);
 
-    // Match all "Depends-On" lines and process each one
-    const dependsOnStrings = mainPR.body.match(/Depends-On:\s*(.*)/gi);
-
-    console.log(`All: ${dependsOnStrings}`);
-
-    // Match Main-Dir: for debugging purpose
-    const mainDirRes = mainPR.body.match(/Main-Dir:\s*(.*)/i);
-
-    const mainDir = mainDirRes ? mainDirRes[1] : '.';
-
-    if (!dependsOnStrings) {
-      console.log('No Depends-On strings found.');
-      return;
-    }
-
-    let nbUnMergedPr = 0;
-
-    for (const dependsOnString of dependsOnStrings) {
-      const dependsOnUrl = dependsOnString.match(/Depends-On:\s*(.*)/i)[1];
-      const parsedUrl = new URL(dependsOnUrl);
-      const params = new URLSearchParams(parsedUrl.search);
-      const [owner, repo] = parsedUrl.pathname.split('/').slice(1, 3);
-      const prNumber = parsedUrl.pathname.split('/').pop();
-      const subdir = params.get('subdir');
-
-      // Construct the URL for cloning the repository
-      const repoUrl = `https://github.com/${owner}/${repo}.git`;
-
-      if (!checkUnmergedPr){
-        myExecSync(`cd .. && git clone ${repoUrl}`);
-      }
-
-      // Get details of the dependent PR
-      const { data: dependsOnPR } = await octokit.rest.pulls.get({
-        owner,
-        repo,
-        pull_number: prNumber
-      });
-
-      if (dependsOnPR.merged) {
-        console.log(`Dependent Pull Request ${prNumber} in ${owner}/${repo} is already merged.`);
-      } else {
-        nbUnMergedPr++;
-        if (!checkUnmergedPr){
-          myExecSync(`cd ../${repo} && git fetch origin pull/${prNumber}/head:pr-${prNumber} && git checkout pr-${prNumber}`);
-          var dependsOnJson = {
-            clone_url: dependsOnPR.head.repo.clone_url,
-            branch: dependsOnPR.head.ref
-          };
-          if (subdir) {
-            dependsOnJson.subdir = subdir;
-          };
-          fs.writeFileSync(`../${repo}/.depends-on.json`, JSON.stringify(dependsOnJson));
-          console.log(`writing ../${repo}/.depends-on.json: ${JSON.stringify(dependsOnJson)}`);
-        }
-      }
-      if (!checkUnmergedPr) {
-        console.log(`Dependent Pull Request ${prNumber} in ${owner}/${repo} cloned to ../${repo}`);
-      }
-    }
-
-    console.log(`checkUnmergedPr=${checkUnmergedPr} nbUnMergedPr${nbUnMergedPr}`);
-    if (checkUnmergedPr && nbUnMergedPr > 0) {
-      core.setFailed(`There are ${nbUnMergedPr} unmerged PRs!`);
-      return;
-    }
-    console.log(`There are ${nbUnMergedPr} unmerged PRs`);
-    myExecSync(`cd ${mainDir} && ${__dirname}/../depends-on`);
+    // the bundle is in the dist sub-directory
+    execSync(`${__dirname}/../stage1.py ${checkUnmergedPr}`, { encoding: 'utf-8' });
   } catch (error) {
     console.log(error);
     core.setFailed(error.message);

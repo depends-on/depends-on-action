@@ -77,7 +77,7 @@ jobs:
 ## Roadmap
 
 - stage 1: [javascript program](index.js) to extract the dependencies.
-- stage 2: [python program](depends-on) to inject the dependencies
+- stage 2: [python program](stage2.py) to inject the dependencies
   into the main PR. Called from stage 1 or standalone.
 - stage 3: check before merge. Same action with a different argument
   (`check-unmerged-pr: true`) called in a different pipeline to not

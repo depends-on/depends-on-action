@@ -34,6 +34,7 @@ def process_python_requirements(main_dir, dirs):
     requirements_txt_new = requirements_txt + ".new"
     if not os.path.exists(requirements_txt):
         return False
+    print("requirements.txt detected", file=sys.stderr)
     module_dirs = get_modules(dirs)
     print(f"{module_dirs=}", file=sys.stderr)
     # replace the modules in requirements.txt
@@ -62,6 +63,7 @@ def process_python_pyproject(main_dir, dirs):
     pyproject_toml_new = pyproject_toml + ".new"
     if not os.path.exists(pyproject_toml):
         return False
+    print("pyproject.toml detected", file=sys.stderr)
     # get the list of python packages from local dependencies
     module_dirs = get_modules(dirs)
     print(f"{module_dirs=}", file=sys.stderr)
