@@ -58,6 +58,11 @@ def directories(top_dir, main_dir):
     return ret
 
 
+def detect_container_mode(main_dir):
+    "Return True if main_dir contains a Dockerfile"
+    return os.path.exists(os.path.join(main_dir, "Dockerfile"))
+
+
 def main():
     "Main function."
     main_dir = os.getcwd()
@@ -69,8 +74,10 @@ def main():
         file=sys.stderr,
     )
 
-    process_golang(main_dir, dirs)
-    process_python(main_dir, dirs)
+    container_mode = detect_container_mode(main_dir)
+    print(f"{container_mode=}", file=sys.stderr)
+    process_golang(main_dir, dirs, container_mode)
+    process_python(main_dir, dirs, container_mode)
 
 
 if __name__ == "__main__":

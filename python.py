@@ -24,11 +24,11 @@ def get_modules(dirs):
             os.path.join(dirs[_dir]["path"], "pyproject.toml")
         )
         if name:
-            python_mods[name] = dirs[_dir]["path"]
+            python_mods[name] = dirs[_dir]
     return python_mods
 
 
-def process_python_requirements(main_dir, dirs):
+def process_python_requirements(main_dir, dirs, container_mode):
     "Replace modules in requirements.txt for the local dependencies."
     requirements_txt = os.path.join(main_dir, "requirements.txt")
     requirements_txt_new = requirements_txt + ".new"
@@ -45,11 +45,20 @@ def process_python_requirements(main_dir, dirs):
                 match = re.match(r"^\s*(\w+)", line)
                 if match and match.group(1) in module_dirs:
                     mod = match.group(1)
-                    print(
-                        f"Replacing {mod} in requirements.txt with {module_dirs[mod]}",
-                        file=sys.stderr,
-                    )
-                    out_stream.write(f"-e {module_dirs[mod]}\n")
+                    if container_mode:
+                        # doc at https://pip.pypa.io/en/stable/cli/pip_install/#git
+                        pkg = f"{mod} @ git+{module_dirs[mod]['fork_url']}@{module_dirs[mod]['branch']}"
+                        print(
+                            f"Replacing {mod} in requirements.txt with {pkg}",
+                            file=sys.stderr,
+                        )
+                        out_stream.write(f"{pkg}\n")
+                    else:
+                        print(
+                            f"Replacing {mod} in requirements.txt with {module_dirs[mod]['path']}",
+                            file=sys.stderr,
+                        )
+                        out_stream.write(f"-e {module_dirs[mod]['path']}\n")
                     nb_replace += 1
                 else:
                     out_stream.write(line)
@@ -57,7 +66,7 @@ def process_python_requirements(main_dir, dirs):
     return nb_replace > 0
 
 
-def process_python_pyproject(main_dir, dirs):
+def process_python_pyproject(main_dir, dirs, container_mode):
     "Replace modules in pyproject.toml for the local dependencies."
     pyproject_toml = os.path.join(main_dir, "pyproject.toml")
     pyproject_toml_new = pyproject_toml + ".new"
@@ -75,11 +84,22 @@ def process_python_pyproject(main_dir, dirs):
                 match = re.match(r"^\s*(\w+)\s*=", line)
                 if match and match.group(1) in module_dirs:
                     mod = match.group(1)
-                    print(
-                        f"Replacing {mod} in pyproject.toml with {module_dirs[mod]}",
-                        file=sys.stderr,
-                    )
-                    out_stream.write(f'{mod} = {{ path = "{module_dirs[mod]}" }}\n')
+                    if container_mode:
+                        # doc at https://python-poetry.org/docs/dependency-specification/#git-dependencies
+                        pkg = f"{mod} = {{ git = \"{module_dirs[mod]['fork_url']}\", branch = \"{module_dirs[mod]['branch']}\" }}"
+                        print(
+                            f"Replacing {mod} in pyproject.toml with {pkg}",
+                            file=sys.stderr,
+                        )
+                        out_stream.write(f"{pkg}\n")
+                    else:
+                        print(
+                            f"Replacing {mod} in pyproject.toml with {module_dirs[mod]['path']}",
+                            file=sys.stderr,
+                        )
+                        out_stream.write(
+                            f'{mod} = {{ path = "{module_dirs[mod]["path"]}" }}\n'
+                        )
                     nb_replace += 1
                 else:
                     out_stream.write(line)
@@ -87,13 +107,13 @@ def process_python_pyproject(main_dir, dirs):
     return nb_replace > 0
 
 
-def process_python(main_dir, dirs):
+def process_python(main_dir, dirs, container_mode):
     "Process python dependencies."
     # process pyprohect.toml first because they can both be present
     # and it supposed to be the main one
-    return process_python_pyproject(main_dir, dirs) or process_python_requirements(
-        main_dir, dirs
-    )
+    return process_python_pyproject(
+        main_dir, dirs, container_mode
+    ) or process_python_requirements(main_dir, dirs, container_mode)
 
 
 # python.py ends here

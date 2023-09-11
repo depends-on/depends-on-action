@@ -6,8 +6,7 @@ import json
 import os
 import re
 import sys
-
-import requests
+from urllib.request import Request, urlopen
 
 
 def load_depends_on(from_dir):
@@ -39,6 +38,10 @@ def extract_github_change(fork_url, branch, main_url, main_branch, repo):
     command(f"cd {repo} && git remote add pr {fork_url} && git fetch pr {branch}")
     # extract the master/main branch name
     command(f"cd {repo} && git checkout -b {branch} --track pr/{branch}")
+    # set a dummy user name and email for the merge process to work
+    command(
+        f"cd {repo} && git config user.name 'Depends-On' && git config user.email 'depends-on@localhost'"
+    )
     # merge the main branch into the PR branch
     command(f"cd {repo} && git merge origin/{main_branch} --no-edit")
 
@@ -46,10 +49,21 @@ def extract_github_change(fork_url, branch, main_url, main_branch, repo):
 def get_pull_request_info(org, repo, pr_number):
     "Get the information about the Pull request."
 
-    # get the information about the Pull request
-    pr_info = requests.get(
-        f"https://api.github.com/repos/{org}/{repo}/pulls/{pr_number}"
-    ).json()
+    token = os.environ.get("GITHUB_TOKEN")
+
+    # get the information about the Pull request using the GitHub API
+    # set the Authorization header to use the token
+    req = Request(
+        f"https://api.github.com/repos/{org}/{repo}/pulls/{pr_number}",
+    )
+    req.add_header("Accept", "application/vnd.github.v3+json")
+    if token:
+        print("Using GitHub token", file=sys.stderr)
+        req.add_header("Authorization", f"token {token}")
+    with urlopen(req) as response:
+        response_content = response.read()
+    response_content.decode("utf-8")
+    pr_info = json.loads(response_content)
 
     return pr_info
 

@@ -90,7 +90,7 @@ jobs:
 - [x] [stage 2: python support](https://github.com/depends-on/depends-on-action/issues/8)
 - [x] [stage 2: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
 - [x] [stage 2: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
-- [ ] [stage 2: Container support](https://github.com/depends-on/depends-on-action/issues/17)
+- [x] [stage 2: Container support](https://github.com/depends-on/depends-on-action/issues/17)
 - [ ] [stage 2: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 1: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
