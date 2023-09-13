@@ -8,8 +8,14 @@ on:
 
 jobs:
   test-inject-dependencies:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-latest, ubuntu-latest]
     steps:
+
+      - name: Python3 version
+        run: python3 --version
 
       - name: Checkout code
         uses: actions/checkout@v3
