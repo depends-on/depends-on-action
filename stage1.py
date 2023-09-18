@@ -147,7 +147,7 @@ def main(check_mode):
 
     nb_unmerged_pr = 0
     for depends_on_url in depends_on:
-        merged = extract_depends_on(depends_on_url, check_mode)
+        merged = extract_depends_on(depends_on_url.strip(), check_mode)
         if not merged:
             nb_unmerged_pr += 1
 
