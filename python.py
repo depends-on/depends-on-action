@@ -8,6 +8,7 @@ import sys
 def lookup_name(fname):
     "Lookup the name of a module"
     if os.path.exists(fname):
+        print(f"Looking up name in {fname}", file=sys.stderr)
         with open(fname, "r", encoding="UTF-8") as in_stream:
             for line in in_stream.readlines():
                 match = re.match(r"^\s*name\s*=\s*['\"](.*?)['\"]\s*,", line)
@@ -48,6 +49,10 @@ def process_python_requirements(main_dir, dirs, container_mode):
                     if container_mode:
                         # doc at https://pip.pypa.io/en/stable/cli/pip_install/#git
                         pkg = f"{mod} @ git+{module_dirs[mod]['fork_url']}@{module_dirs[mod]['branch']}"
+                        if "subdir" in module_dirs[mod]:
+                            pkg += (
+                                f"#egg=subdir&subdirectory={module_dirs[mod]['subdir']}"
+                            )
                         print(
                             f"Replacing {mod} in requirements.txt with {pkg}",
                             file=sys.stderr,
@@ -86,7 +91,13 @@ def process_python_pyproject(main_dir, dirs, container_mode):
                     mod = match.group(1)
                     if container_mode:
                         # doc at https://python-poetry.org/docs/dependency-specification/#git-dependencies
-                        pkg = f"{mod} = {{ git = \"{module_dirs[mod]['fork_url']}\", branch = \"{module_dirs[mod]['branch']}\" }}"
+                        pkg = f"{mod} = {{ git = \"{module_dirs[mod]['fork_url']}\", branch = \"{module_dirs[mod]['branch']}\""
+                        if "subdir" in module_dirs[mod]:
+                            pkg += (
+                                f", subdirectory = \"{module_dirs[mod]['subdir']}\" }}"
+                            )
+                        else:
+                            pkg += " }"
                         print(
                             f"Replacing {mod} in pyproject.toml with {pkg}",
                             file=sys.stderr,

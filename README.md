@@ -12,6 +12,12 @@ The action is extracting all the Pull Requests that are declared in
 the description of the Pull Request with `Depends-On: <PR url>`
 syntax.
 
+If you need to specify a subdir for a particular PR, use the following syntax:
+
+```txt
+Depends-On: <PR url>?subdir=<subdir path>
+```
+
 It then injects the needed changes in the code to use the other Pull Requests.
 
 ### Go lang
