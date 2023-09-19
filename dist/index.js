@@ -9838,6 +9838,12 @@ async function run() {
     const token = core.getInput('token');
     const checkUnmergedPr = core.getBooleanInput('check-unmerged-pr');
     const context = github.context;
+
+    if (!context.payload.pull_request) {
+      console.log('Not a pull request. Skipping');
+      return;
+    }
+
     const prNumber = context.payload.pull_request.number;
 
     console.log(`Pull Request number: ${prNumber} checkUnmergedPr=${checkUnmergedPr}`);
