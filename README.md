@@ -8,40 +8,43 @@ by later steps.
 This action allows you to install Pull Request dependencies when the workflow
 action is triggered.
 
-The action is extracting all the Pull Requests that are declared in
-the description of the Pull Request with `Depends-On: <PR url>`
-syntax.
+You need this action if your project is split into multiple repositories, and you can have Pull Requests that must be tested together. It happens often when you have libraries or micro-services in different repositories, and you need to test changes with the programs that use them. Even if you depend on third-party repositories that are not yours, you can use this action to test your Pull Requests with the third-party Pull Requests.
 
-If you need to specify a subdir for a particular PR, use the following syntax:
+How does it work? This GitHub action extracts all the Pull Requests that are declared in the description of the main Pull Request with the `Depends-On: <PR url>` syntax. You can have multiple dependencies in the description of the main Pull Request by adding multiple `Depends-On:` lines. For example, if you depend on a Pull Request in the `org/library` repository, you can add the following line in the description of your Pull Request:
+
+```txt
+Change to use the new library function
+
+Depends-On: https://github.com/org/library/pull/123
+```
+
+If you need to specify a sub-directory for a particular Pull Request, use the following syntax:
 
 ```txt
 Depends-On: <PR url>?subdir=<subdir path>
 ```
 
-It then injects the needed changes in the code to use the other Pull Requests.
+This GitHub action then injects the needed changes in the code to use the other Pull Requests.
 
 ### Go lang
 
-For a go lang change, the action is adding replace directives for the
-dependencies inside the `go.mod` file. This action needs to be placed
-after the installation of the Go lang toolchain.
+For a Go lang change, the action adds `replace` directives for the dependencies inside the `go.mod` file. This action needs to be placed after installing the Go lang toolchain.
 
 ### Python
 
-For a Python change, the action is replacing entries in
-`requirements.txt` with a `-e <local change>` or the equivalent for
-`pyproject.toml`.
+The action replaces entries in `requirements.txt` for a Python change with a `-e <local change>` or the equivalent for `pyproject.toml`.
+
+### Container
+
+The action auto-detects if a container is present and injects the changes in a compatible way if this is the case.
 
 ## Enabling the action
 
 ### Sample Configuration
 
-Defining Github Actions requires that you create a directory
-`.github/workflows` inside your repository.  Inside this directory you
-create files which are processed when various events occur.
+Defining Github Actions requires creating a directory `.github/workflows` inside your repository. Inside this directory, you create files processed when various events occur.
 
-The simplest example of using this action would be to create the file
-`.github/workflows/pull_request.yml` with the following contents:
+The simplest example of using this action would be to create the file `.github/workflows/pull_request.yml` with the following contents:
 
 ```yaml
 ---
@@ -81,27 +84,29 @@ jobs:
 ...
 ```
 
+You need two pipelines: one to do your regular builds and tests and the second to block until the dependent PR are merged.
+
+## Details
+
+- stage 1: [javascript program](index.js) to extract the dependency information from the main change.
+- stage 2: [stage2.py python program](stage2.py) to extract the dependent pull requests
+- stage 3: [stage3.py python program](stage3.py) to inject the dependencies into the main PR according to the detected programming languages.
+
+When the action is called with the `check-unmerged-pr: true` setting, stages 1 and 2 are used but not stage 3. Stage 2, in this case, is not extracting the dependent PR on disk but just checking the merge status of all the dependent PR.
+
 ## Roadmap
 
-- stage 1: [javascript program](index.js) to extract the dependencies.
-- stage 2: [python program](stage2.py) to inject the dependencies
-  into the main PR. Called from stage 1 or standalone.
-- stage 3: check before merge. Same action with a different argument
-  (`check-unmerged-pr: true`) called in a different pipeline to not
-  pollute the status of the build but still indicating that the change
-  cannot be merged as it is dependent on other changes.
-
 - [x] [stage 1: extract public PR](https://github.com/depends-on/depends-on-action/issues/2)
-- [x] [stage 2: go support](https://github.com/depends-on/depends-on-action/issues/3)
-- [x] [stage 3: prevent merging if a dependent PR isn't merged](https://github.com/depends-on/depends-on-action/issues/10)
-- [x] [stage 2: python support](https://github.com/depends-on/depends-on-action/issues/8)
-- [x] [stage 2: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
-- [x] [stage 2: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
-- [x] [stage 2: Container support](https://github.com/depends-on/depends-on-action/issues/17)
-- [ ] [stage 2: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
-- [ ] [stage 2: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
-- [ ] [stage 1: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
-- [ ] [stage 1: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
-- [ ] [stage 2: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
-- [ ] [stage 2: rust support](https://github.com/depends-on/depends-on-action/issues/11)
-- [ ] [stage 2: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
+- [x] [stage 3: go support](https://github.com/depends-on/depends-on-action/issues/3)
+- [x] [stage 2: prevent merging if a dependent PR isn't merged](https://github.com/depends-on/depends-on-action/issues/10)
+- [x] [stage 3: python support](https://github.com/depends-on/depends-on-action/issues/8)
+- [x] [stage 3: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
+- [x] [stage 3: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
+- [x] [stage 3: Container support](https://github.com/depends-on/depends-on-action/issues/17)
+- [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
+- [ ] [stage 3: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
+- [ ] [stage 2: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
+- [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
+- [ ] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
+- [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
+- [ ] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)

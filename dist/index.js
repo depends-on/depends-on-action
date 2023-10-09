@@ -9871,14 +9871,14 @@ async function run() {
       branch: mainPR.head.ref,
       description: description
     };
-    fs.writeFileSync('.depends-on.json', JSON.stringify(changeJson));
-    console.log(`writing .depends-on.json: ${JSON.stringify(changeJson)}`);
+    fs.writeFileSync('depends-on.json', JSON.stringify(changeJson));
+    console.log(`writing depends-on.json: ${JSON.stringify(changeJson)}`);
 
     // export token as the GITHUB_TOKEN env variable
     core.exportVariable('GITHUB_TOKEN', token);
 
     // the bundle is in the dist sub-directory
-    execSync(`${__dirname}/../stage1.py ${checkUnmergedPr}`, { encoding: 'utf-8' });
+    execSync(`${__dirname}/../stage2.py ${checkUnmergedPr}`, { encoding: 'utf-8' });
   } catch (error) {
     console.log(error);
     core.setFailed(error.message);
