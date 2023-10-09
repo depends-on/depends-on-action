@@ -23,9 +23,8 @@ It then injects the needed changes in the code to use the other Pull Requests.
 ### Go lang
 
 For a go lang change, the action is adding replace directives for the
-dependencies inside the `go.mod` file. It is not running `go mod tidy`
-and it is expecting it to be run by your build automation in a later
-stage.
+dependencies inside the `go.mod` file. This action needs to be placed
+after the installation of the Go lang toolchain.
 
 ### Python
 
@@ -57,6 +56,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@master
+
+      # install the toolchain for your language
 
       - name: Extract dependent Pull Requests
         uses: depends-on/depends-on-action@main
