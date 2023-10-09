@@ -19,32 +19,32 @@ def process_golang(main_dir, dirs, container_mode):
                 github_mods.append(match.group(2))
     # add the replace directives to go.mod for the local dependencies
     nb_replace = 0
-    with open(go_mod, "a", encoding="UTF-8") as out_stream:
-        for mod in github_mods:
-            if mod in dirs:
-                if container_mode:
-                    # remove https:// at the beginning of the url and .git at the end
-                    fork_url = (
-                        dirs[mod]["fork_url"]
-                        .replace("https://", "", 1)
-                        .replace(".git", "", 1)
-                    )
-                    print(
-                        f'Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]["branch"]}',
-                        file=sys.stderr,
-                    )
-                    # do not use "go mod edit -replace" as go could be not installed at this stage
-                    out_stream.write(
-                        f'replace {mod} => {fork_url} {dirs[mod]["branch"]}\n'
-                    )
-                else:
-                    print(
-                        f'Adding replace directive in go.mod for {mod} => {dirs[mod]["path"]}',
-                        file=sys.stderr,
-                    )
-                    # do not use "go mod edit -replace" as go could be not installed at this stage
-                    out_stream.write(f'replace {mod} => {dirs[mod]["path"]}\n')
-                nb_replace += 1
+    for mod in github_mods:
+        if mod in dirs:
+            if container_mode:
+                # remove https:// at the beginning of the url and .git at the end
+                fork_url = (
+                    dirs[mod]["fork_url"]
+                    .replace("https://", "", 1)
+                    .replace(".git", "", 1)
+                )
+                print(
+                    f'Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]["branch"]}',
+                    file=sys.stderr,
+                )
+                os.system(
+                    f"set -x; go mod edit -replace {mod}={fork_url}@{dirs[mod]['branch']}"
+                )
+            else:
+                print(
+                    f'Adding replace directive in go.mod for {mod} => {dirs[mod]["path"]}',
+                    file=sys.stderr,
+                )
+                os.system(f"set -x; go mod edit -replace {mod}={dirs[mod]['path']}")
+            nb_replace += 1
+    # if there is any change to go.mod, `go mod tidy` needs to be called to have a correct go.sums
+    if nb_replace > 0:
+        os.system("set -x; go mod tidy")
     return nb_replace > 0
 
 
