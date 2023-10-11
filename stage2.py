@@ -1,86 +1,182 @@
 #!/usr/bin/env python3
 
-"""Stage2: inject the local dependencies into the main changeset.
-"""
+"Stage2: extract dependencies of the main changeset and call stage3."
 
 import json
 import os
+import re
 import sys
-
-from golang import process_golang
-from python import process_python
+from urllib.request import Request, urlopen
 
 
-def extract_repo_name(url):
-    "Return the repository name from a git URL in the form github.com/<org>/<repo>."
-    if not url:
-        return url
-    if url.endswith(".git"):
-        url = url[:-4]
-    return "/".join(url.split("/")[2:5])
+def load_depends_on(from_dir):
+    "Load the data from the depends-on.json file"
+
+    fname = os.path.join(from_dir, "depends-on.json")
+
+    with open(fname, "r", encoding="UTF-8") as json_stream:
+        return json.load(json_stream)
 
 
-def get_remote_url(proj_dir):
-    "Return the remote URL of the git repository in proj_dir."
-    origin_url = os.popen(f"cd {proj_dir} && git remote get-url origin").read().strip()
-    # convert ssh to https
-    if origin_url.startswith("git@"):
-        origin_url = origin_url.replace(":", "/", 1)
-        origin_url = origin_url.replace("git@", "https://")
-    return origin_url
+def check_error(status, message):
+    "Check the status and exit if it is false."
+    if not status:
+        print(message, file=sys.stderr)
+        sys.exit(1)
 
 
-def directories(top_dir, main_dir):
-    """Return a dict of {repo_name: <dict info>} for all git repositories in top_dir.
-
-    dict info:
-    - topdir: the top directory of the repository
-    - path: the path to the module in the repository
-    - subdir: the subdirectory of the module in the repository (optional)
-    """
-    ret = {}
-    for d in os.listdir(top_dir):
-        key_dir = os.path.join(top_dir, d)
-        if (
-            os.path.isdir(key_dir)
-            and key_dir != main_dir
-            and os.path.isdir(os.path.join(key_dir, ".git"))
-        ):
-            info = {"topdir": top_dir, "path": top_dir}
-            json_fname = os.path.join(key_dir, ".depends-on.json")
-            if os.path.exists(json_fname):
-                with open(json_fname, "r") as json_stream:
-                    data = json.load(json_stream)
-                    info.update(data)
-                    if "subdir" in data:
-                        info["path"] = os.path.join(key_dir, data["subdir"])
-            ret[extract_repo_name(get_remote_url(key_dir))] = info
-    return ret
+def command(cmd):
+    "Execute a command"
+    print(f"+ {cmd}", file=sys.stderr)
+    ret = os.system(cmd)
+    check_error(ret == 0, f"Command failed with exit code {ret}")
 
 
-def detect_container_mode(main_dir):
-    "Return True if main_dir contains a Dockerfile"
-    return os.path.exists(os.path.join(main_dir, "Dockerfile"))
+def extract_github_change(fork_url, branch, main_url, main_branch, repo):
+    "Extract the dependency by git cloning the repository in the right branch for the Pull request."
+    command(f"git clone --filter=tree:0 {main_url}")
+    command(f"cd {repo} && git remote add pr {fork_url} && git fetch pr {branch}")
+    # extract the master/main branch name
+    command(f"cd {repo} && git checkout -b {branch} --track pr/{branch}")
+    # set a dummy user name and email for the merge process to work
+    command(
+        f"cd {repo} && git config user.name 'Depends-On' && git config user.email 'depends-on@localhost'"
+    )
+    # merge the main branch into the PR branch
+    command(f"cd {repo} && git merge origin/{main_branch} --no-edit")
 
 
-def main():
+def get_pull_request_info(org, repo, pr_number):
+    "Get the information about the Pull request."
+
+    token = os.environ.get("GITHUB_TOKEN")
+
+    # get the information about the Pull request using the GitHub API
+    # set the Authorization header to use the token
+    req = Request(
+        f"https://api.github.com/repos/{org}/{repo}/pulls/{pr_number}",
+    )
+    req.add_header("Accept", "application/vnd.github.v3+json")
+    if token:
+        print("Using GitHub token", file=sys.stderr)
+        req.add_header("Authorization", f"token {token}")
+    with urlopen(req) as response:
+        response_content = response.read()
+    response_content.decode("utf-8")
+    pr_info = json.loads(response_content)
+
+    return pr_info
+
+
+def extract_depends_on(depends_on_url, check_mode):
+    "Extract the dependency by git cloning the repository in the right branch for the Pull request."
+    # parse the URL to extract the repo, org and pr number
+    # the format is https://github.com/<org>/<repo>/pull/<pr_number>?subdir=<subdir>&<key>=<value>
+    url_parts = depends_on_url.split("/")
+    if len(url_parts) != 7:
+        raise ValueError(f"Invalid URL {depends_on_url}")
+    org = url_parts[3]
+    repo = url_parts[4]
+    pr_data = url_parts[6].split("?", 1)
+    pr_number = pr_data[0]
+    if len(pr_data) == 2:
+        pr_data = pr_data[1].split("&")
+        pr_data = {x.split("=")[0]: x.split("=")[1] for x in pr_data}
+    else:
+        pr_data = {}
+
+    pr_info = get_pull_request_info(org, repo, pr_number)
+
+    if not check_mode:
+        # extract the dependency on disk
+        extract_github_change(
+            pr_info["head"]["repo"]["clone_url"],
+            pr_info["head"]["ref"],
+            pr_info["base"]["repo"]["clone_url"],
+            pr_info["base"]["ref"],
+            repo,
+        )
+
+        # save the information about the Pull request in depends-on.json
+        top_dir = os.path.realpath(repo)
+        data = {
+            "fork_url": pr_info["head"]["repo"]["clone_url"],
+            "branch": pr_info["head"]["ref"],
+            "main_url": pr_info["base"]["repo"]["clone_url"],
+            "main_branch": pr_info["base"]["ref"],
+            "topdir": top_dir,
+            "path": top_dir,
+            "merged": pr_info["merged"],
+        }
+        if "subdir" in pr_data:
+            data["subdir"] = pr_data["subdir"]
+            data["path"] = os.path.join(top_dir, pr_data["subdir"])
+        with open(
+            os.path.join(repo, "depends-on.json"), "w", encoding="UTF-8"
+        ) as json_stream:
+            json.dump(data, json_stream, indent=2)
+
+        print(f"PR data: {data}", file=sys.stderr)
+    return pr_info["merged"]
+
+
+def main(check_mode):
     "Main function."
-    main_dir = os.getcwd()
-    top_dir = os.path.dirname(main_dir)
 
-    dirs = directories(top_dir, main_dir)
-    print(
-        f"{main_dir=} {top_dir=} {dirs=} called from {__file__}!",
-        file=sys.stderr,
+    # get the current directory
+    main_dir = os.getcwd()
+
+    data = load_depends_on(main_dir)
+
+    if "description" not in data:
+        print("No description found.", file=sys.stderr)
+        return 0
+
+    depends_on = re.findall(
+        r"^Depends-On: (.*)", data["description"], re.IGNORECASE | re.MULTILINE
     )
 
-    container_mode = detect_container_mode(main_dir)
-    print(f"{container_mode=}", file=sys.stderr)
-    process_golang(main_dir, dirs, container_mode)
-    process_python(main_dir, dirs, container_mode)
+    if len(depends_on) == 0:
+        print("No Depends-On found.", file=sys.stderr)
+        return 0
+
+    print(f"depends_on: {depends_on}", file=sys.stderr)
+
+    # go to the top dir (above main_dir)
+    os.chdir(os.path.join(main_dir, ".."))
+
+    nb_unmerged_pr = 0
+    for depends_on_url in depends_on:
+        merged = extract_depends_on(depends_on_url.strip(), check_mode)
+        if not merged:
+            nb_unmerged_pr += 1
+
+    print(f"{nb_unmerged_pr} unmerged PR", file=sys.stderr)
+
+    if check_mode:
+        return 1 if nb_unmerged_pr > 0 else 0
+
+    if nb_unmerged_pr == 0:
+        print("No unmerged PR found.", file=sys.stderr)
+        return 0
+
+    # extract the Main-Dir: <dir> string if any from the description
+    main_dir_res = re.findall(
+        r"^Main-Dir: (.*)", data["description"], re.IGNORECASE | re.MULTILINE
+    )
+
+    if len(main_dir_res) > 0:
+        main_dir = main_dir_res[-1].strip()
+
+    print(f"+ chdir {main_dir}", file=sys.stderr)
+    os.chdir(main_dir)
+
+    stage3 = os.path.join(os.path.dirname(__file__), "stage3.py")
+    print(f"+ {stage3}", file=sys.stderr)
+    os.execl(stage3, "stage3.py")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1] == "true"))
 
 # stage2.py ends here
