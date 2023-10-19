@@ -8,6 +8,7 @@ import os
 import sys
 
 from golang import process_golang
+from javascript import process_javascript
 from python import process_python
 
 
@@ -80,6 +81,7 @@ def main():
     print(f"{container_mode=}", file=sys.stderr)
     process_golang(main_dir, dirs, container_mode)
     process_python(main_dir, dirs, container_mode)
+    process_javascript(main_dir, dirs, container_mode)
 
 
 if __name__ == "__main__":
