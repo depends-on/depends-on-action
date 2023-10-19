@@ -34,6 +34,10 @@ For a Go lang change, the action adds `replace` directives for the dependencies 
 
 The action replaces entries in `requirements.txt` for a Python change with a `-e <local change>` or the equivalent for `pyproject.toml`.
 
+### Javascript
+
+The action replaces entries in `package.json` for Javascript change with `file:<local change>`.
+
 ### Container
 
 The action auto-detects if a container is present and injects the changes in a compatible way if this is the case.
@@ -103,10 +107,10 @@ When the action is called with the `check-unmerged-pr: true` setting, stages 1 a
 - [x] [stage 3: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
 - [x] [stage 3: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
 - [x] [stage 3: Container support](https://github.com/depends-on/depends-on-action/issues/17)
+- [x] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 3: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 2: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
 - [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
-- [ ] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)

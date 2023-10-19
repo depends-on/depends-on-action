@@ -1,4 +1,4 @@
-"golang specific code for stage 2."
+"golang specific code for stage 3."
 
 import os
 import re
