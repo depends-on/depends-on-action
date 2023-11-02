@@ -1,2 +1,6 @@
 node_modules
 __pycache__
+depends_on.egg-info
+build
+dist/*.tar.gz
+dist/*.whl

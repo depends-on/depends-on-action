@@ -57,7 +57,7 @@ async function run() {
     core.exportVariable('GITHUB_TOKEN', token);
 
     // the bundle is in the dist sub-directory
-    execSync(`${__dirname}/../stage2.py ${checkUnmergedPr}`, { encoding: 'utf-8' });
+    execSync(`${__dirname}/../depends_on_stage2 ${checkUnmergedPr}`, { encoding: 'utf-8' });
   } catch (error) {
     console.log(error);
     core.setFailed(error.message);
