@@ -25,6 +25,7 @@ jobs:
         run: |
           set -xe
           python3 setup.py sdist bdist_wheel
+          rm -f dist/index.js
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
