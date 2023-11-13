@@ -93,8 +93,8 @@ You need two pipelines: one to do your regular builds and tests and the second t
 ## Details
 
 - stage 1: [javascript program](index.js) to extract the dependency information from the main change.
-- stage 2: [stage2.py python program](stage2.py) to extract the dependent pull requests
-- stage 3: [stage3.py python program](stage3.py) to inject the dependencies into the main PR according to the detected programming languages.
+- stage 2: [depends_on_stage2 python program](depends_on_stage2) to extract the dependent pull requests
+- stage 3: [depends_on_stage3 python program](depends_on_stage3) to inject the dependencies into the main PR according to the detected programming languages.
 
 When the action is called with the `check-unmerged-pr: true` setting, stages 1 and 2 are used but not stage 3. Stage 2, in this case, is not extracting the dependent PR on disk but just checking the merge status of all the dependent PR.
 
@@ -108,6 +108,7 @@ When the action is called with the `check-unmerged-pr: true` setting, stages 1 a
 - [x] [stage 3: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
 - [x] [stage 3: Container support](https://github.com/depends-on/depends-on-action/issues/17)
 - [x] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
+- [x] [python package on pypi](https://github.com/depends-on/depends-on-action/issues/31)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 3: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 2: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)

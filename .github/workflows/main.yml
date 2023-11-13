@@ -1,6 +1,6 @@
 ---
 
-name: Get Pull Request Dependencies
+name: Test pipeline
 
 on:
   pull_request:
@@ -18,11 +18,17 @@ jobs:
         run: python3 --version
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Inject dependent Pull Requests
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build python package
+        run: |
+          set -xe
+          pip install setuptools wheel
+          python3 setup.py sdist bdist_wheel
 
 ...

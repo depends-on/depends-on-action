@@ -171,9 +171,9 @@ def main(check_mode):
     print(f"+ chdir {main_dir}", file=sys.stderr)
     os.chdir(main_dir)
 
-    stage3 = os.path.join(os.path.dirname(__file__), "stage3.py")
+    stage3 = os.path.join(os.path.dirname(__file__), "depends_on_stage3")
     print(f"+ {stage3}", file=sys.stderr)
-    os.execl(stage3, "stage3.py")
+    os.execl(stage3, "depends_on_stage3")
 
 
 if __name__ == "__main__":

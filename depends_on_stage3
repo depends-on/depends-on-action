@@ -7,9 +7,9 @@ import json
 import os
 import sys
 
-from golang import process_golang
-from javascript import process_javascript
-from python import process_python
+from depends_on.golang import process_golang
+from depends_on.javascript import process_javascript
+from depends_on.python import process_python
 
 
 def extract_repo_name(url):
