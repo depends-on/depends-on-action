@@ -28,7 +28,7 @@ jobs:
       - name: Build python package
         run: |
           set -xe
-          pip install setuptools wheel
+          pip3 install setuptools wheel
           python3 setup.py sdist bdist_wheel
 
 ...

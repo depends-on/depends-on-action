@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+"Stage1: extract the main change and call stage2."
+
+import json
+import os
+import re
+import sys
+from urllib.request import Request, urlopen
+
+from depends_on.common import extract_github_change
+
+
+def main(args):
+    "Main function."
+
+    if len(args) == 1 or args[1] in ("-h", "--help") or not os.path.isfile(args[-1]):
+        print(f"Usage: {args[0]} <pr_data.json>", file=sys.stderr)
+        return 0 if len(args) > 1 and args[1] in ("-h", "--help") else 1
+
+    main_dir = os.getcwd()
+
+    with open(os.path.join(main_dir, args[-1]), "r", encoding="UTF-8") as json_pr:
+        pr_info = json.load(json_pr)
+
+    top_dir = extract_github_change(
+        pr_info["head"]["repo"]["clone_url"],
+        pr_info["head"]["ref"],
+        pr_info["base"]["repo"]["clone_url"],
+        pr_info["base"]["ref"],
+        pr_info["base"]["repo"]["name"],
+    )
+
+    # save information about the main change into .depends-on.json
+    pr_data = {
+        "description": pr_info["body"],
+        "fork_url": pr_info["head"]["repo"]["clone_url"],
+        "branch": pr_info["head"]["ref"],
+        "main_url": pr_info["base"]["repo"]["clone_url"],
+        "main_branch": pr_info["base"]["ref"],
+        "topdir": top_dir,
+        "path": top_dir,
+        "merged": pr_info["merged"],
+    }
+
+    print(f"+ chdir {top_dir}", file=sys.stderr)
+    os.chdir(top_dir)
+
+    with open("depends-on.json", "w", encoding="UTF-8") as json_stream:
+        json.dump(pr_data, json_stream, indent=2)
+
+    stage2 = os.path.join(os.path.dirname(__file__), "depends_on_stage2")
+    print(f"+ {stage2}", file=sys.stderr)
+    os.execl(stage2, "depends_on_stage2", "false")
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+
+# stage1.py ends here
