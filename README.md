@@ -98,6 +98,23 @@ You need two pipelines: one to do your regular builds and tests and the second t
 
 When the action is called with the `check-unmerged-pr: true` setting, stages 1 and 2 are used but not stage 3. Stage 2, in this case, is not extracting the dependent PR on disk but just checking the merge status of all the dependent PR.
 
+## Usage outside of a GitHub action
+
+If you want to use the same dependency management in other CI pipelines or in a local test, you can install the python package:
+
+```shellsession
+$ pip install depends-on
+```
+
+and use the `depends_on_stage1` script as an entry point taking a json file with the data from your Pull Request:
+
+```shellsession
+$ cd <workspace>
+$ export GITHUB_LOGIN=<your token>
+$ curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/depends-on/pyprog/pulls/2 > pr-data.json
+$ depends_on_stage1 pr-data.json
+```
+
 ## Roadmap
 
 - [x] [stage 1: extract public PR](https://github.com/depends-on/depends-on-action/issues/2)
@@ -109,6 +126,7 @@ When the action is called with the `check-unmerged-pr: true` setting, stages 1 a
 - [x] [stage 3: Container support](https://github.com/depends-on/depends-on-action/issues/17)
 - [x] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
 - [x] [python package on pypi](https://github.com/depends-on/depends-on-action/issues/31)
+- [x] [Non GitHub action usage](https://github.com/depends-on/depends-on-action/issues/32)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 3: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 2: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)

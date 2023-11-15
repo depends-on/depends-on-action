@@ -18,5 +18,5 @@ setup(
     ],
     version=json.load(open("package.json"))["version"],
     packages=["depends_on"],
-    scripts=["depends_on_stage2", "depends_on_stage3"],
+    scripts=["depends_on_stage1", "depends_on_stage2", "depends_on_stage3"],
 )
