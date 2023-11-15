@@ -62,12 +62,12 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       # install the toolchain for your language
 
       - name: Extract dependent Pull Requests
-        uses: depends-on/depends-on-action@main
+        uses: depends-on/depends-on-action@0.10.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -78,10 +78,10 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       - name: Check all dependent Pull Requests are merged
-        uses: depends-on/depends-on-action@main
+        uses: depends-on/depends-on-action@0.10.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           check-unmerged-pr: true
