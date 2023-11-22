@@ -111,8 +111,7 @@ and use the `depends_on_stage1` script as an entry point taking a json file with
 ```shellsession
 $ cd <workspace>
 $ export GITHUB_LOGIN=<your token>
-$ curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/depends-on/pyprog/pulls/2 > pr-data.json
-$ depends_on_stage1 pr-data.json
+$ depends_on_stage1 https://github.com/depends-on/pyprog/pulls/2
 ```
 
 ## Roadmap
@@ -127,9 +126,9 @@ $ depends_on_stage1 pr-data.json
 - [x] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
 - [x] [python package on pypi](https://github.com/depends-on/depends-on-action/issues/31)
 - [x] [Non GitHub action usage](https://github.com/depends-on/depends-on-action/issues/32)
+- [x] [stage 2: gerrit support](https://github.com/depends-on/depends-on-action/issues/6)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 3: Github action support](https://github.com/depends-on/depends-on-action/issues/5)
-- [ ] [stage 2: gerrit support for software-factory.io](https://github.com/depends-on/depends-on-action/issues/6)
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
 - [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
