@@ -113,9 +113,9 @@ def extract_gerrit_review(depends_on_url, check_mode):
     change_id = change_parts[-1]
     # Get the information about the Gerrit change
     change_info = get_gerrit_change_info(gerrit_url, change_id)
+    project = os.path.basename(change_info["project"])
+    top_dir = os.path.realpath(project)
     if not check_mode:
-        project = os.path.basename(change_info["project"])
-        top_dir = os.path.realpath(project)
         # extract the dependency on disk
         extract_gerrit_change(
             change_info["revisions"][change_info["current_revision"]]["fetch"][
