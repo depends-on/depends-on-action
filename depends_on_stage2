@@ -8,7 +8,7 @@ import re
 import sys
 from urllib.request import Request, urlopen
 
-from depends_on.common import extract_depends_on
+from depends_on.common import extract_depends_on, init_sensitive_strings, log
 
 
 def load_depends_on(from_dir):
@@ -23,13 +23,15 @@ def load_depends_on(from_dir):
 def main(check_mode):
     "Main function."
 
+    init_sensitive_strings()
+
     # get the current directory
     main_dir = os.getcwd()
 
     data = load_depends_on(main_dir)
 
-    if "description" not in data:
-        print("No description found.", file=sys.stderr)
+    if "description" not in data or data["description"] is None:
+        log("No description found.")
         return 0
 
     depends_on = re.findall(
@@ -37,10 +39,10 @@ def main(check_mode):
     )
 
     if len(depends_on) == 0:
-        print("No Depends-On found.", file=sys.stderr)
+        log("No Depends-On found.")
         return 0
 
-    print(f"depends_on: {depends_on}", file=sys.stderr)
+    log(f"depends_on: {depends_on}")
 
     # go to the top dir (above main_dir)
     os.chdir(os.path.join(main_dir, ".."))
@@ -51,13 +53,13 @@ def main(check_mode):
         if not merged:
             nb_unmerged_pr += 1
 
-    print(f"{nb_unmerged_pr} unmerged PR", file=sys.stderr)
+    log(f"{nb_unmerged_pr} unmerged PR")
 
     if check_mode:
         return 1 if nb_unmerged_pr > 0 else 0
 
     if nb_unmerged_pr == 0:
-        print("No unmerged PR found.", file=sys.stderr)
+        log("No unmerged PR found.")
         return 0
 
     # extract the Main-Dir: <dir> string if any from the description
@@ -68,11 +70,11 @@ def main(check_mode):
     if len(main_dir_res) > 0:
         main_dir = main_dir_res[-1].strip()
 
-    print(f"+ chdir {main_dir}", file=sys.stderr)
+    log(f"+ chdir {main_dir}")
     os.chdir(main_dir)
 
     stage3 = os.path.join(os.path.dirname(__file__), "depends_on_stage3")
-    print(f"+ {stage3}", file=sys.stderr)
+    log(f"+ {stage3}")
     os.execl(stage3, "depends_on_stage3")
 
 

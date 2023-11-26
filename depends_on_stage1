@@ -5,25 +5,27 @@
 import os
 import sys
 
-from depends_on.common import extract_depends_on
+from depends_on.common import extract_depends_on, init_sensitive_strings, log
 
 
 def main(args):
     "Main function."
 
+    init_sensitive_strings()
+
     if len(args) != 2 or args[1] in ("-h", "--help"):
-        print(f"Usage: {args[0]} <CHANGE URL>", file=sys.stderr)
+        log(f"Usage: {args[0]} <CHANGE URL>")
         return 0 if len(args) > 1 and args[1] in ("-h", "--help") else 1
 
     main_dir = os.getcwd()
 
     _, top_dir = extract_depends_on(args[1], False)
 
-    print(f"+ chdir {top_dir}", file=sys.stderr)
+    log(f"+ chdir {top_dir}")
     os.chdir(top_dir)
 
     stage2 = os.path.join(os.path.dirname(__file__), "depends_on_stage2")
-    print(f"+ {stage2}", file=sys.stderr)
+    log(f"+ {stage2}")
     os.execl(stage2, "depends_on_stage2", "false")
 
 

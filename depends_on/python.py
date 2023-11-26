@@ -4,11 +4,13 @@ import os
 import re
 import sys
 
+from depends_on.common import log
+
 
 def lookup_name(fname):
     "Lookup the name of a module"
     if os.path.exists(fname):
-        print(f"Looking up name in {fname}", file=sys.stderr)
+        log(f"Looking up name in {fname}")
         with open(fname, "r", encoding="UTF-8") as in_stream:
             for line in in_stream.readlines():
                 match = re.match(r"^\s*name\s*=\s*['\"](.*?)['\"]\s*,", line)
@@ -35,9 +37,9 @@ def process_python_requirements(main_dir, dirs, container_mode):
     requirements_txt_new = requirements_txt + ".new"
     if not os.path.exists(requirements_txt):
         return False
-    print("requirements.txt detected", file=sys.stderr)
+    log("requirements.txt detected")
     module_dirs = get_modules(dirs)
-    print(f"{module_dirs=}", file=sys.stderr)
+    log(f"{module_dirs=}")
     # replace the modules in requirements.txt
     nb_replace = 0
     with open(requirements_txt, "r", encoding="UTF-8") as in_stream:
@@ -53,15 +55,11 @@ def process_python_requirements(main_dir, dirs, container_mode):
                             pkg += (
                                 f"#egg=subdir&subdirectory={module_dirs[mod]['subdir']}"
                             )
-                        print(
-                            f"Replacing {mod} in requirements.txt with {pkg}",
-                            file=sys.stderr,
-                        )
+                        log(f"Replacing {mod} in requirements.txt with {pkg}")
                         out_stream.write(f"{pkg}\n")
                     else:
-                        print(
-                            f"Replacing {mod} in requirements.txt with {module_dirs[mod]['path']}",
-                            file=sys.stderr,
+                        log(
+                            f"Replacing {mod} in requirements.txt with {module_dirs[mod]['path']}"
                         )
                         out_stream.write(f"-e {module_dirs[mod]['path']}\n")
                     nb_replace += 1
@@ -77,10 +75,10 @@ def process_python_pyproject(main_dir, dirs, container_mode):
     pyproject_toml_new = pyproject_toml + ".new"
     if not os.path.exists(pyproject_toml):
         return False
-    print("pyproject.toml detected", file=sys.stderr)
+    log("pyproject.toml detected")
     # get the list of python packages from local dependencies
     module_dirs = get_modules(dirs)
-    print(f"{module_dirs=}", file=sys.stderr)
+    log(f"{module_dirs=}")
     # replace the modules in pyproject.toml
     nb_replace = 0
     with open(pyproject_toml, "r", encoding="UTF-8") as in_stream:
@@ -98,15 +96,11 @@ def process_python_pyproject(main_dir, dirs, container_mode):
                             )
                         else:
                             pkg += " }"
-                        print(
-                            f"Replacing {mod} in pyproject.toml with {pkg}",
-                            file=sys.stderr,
-                        )
+                        log(f"Replacing {mod} in pyproject.toml with {pkg}")
                         out_stream.write(f"{pkg}\n")
                     else:
-                        print(
-                            f"Replacing {mod} in pyproject.toml with {module_dirs[mod]['path']}",
-                            file=sys.stderr,
+                        log(
+                            f"Replacing {mod} in pyproject.toml with {module_dirs[mod]['path']}"
                         )
                         out_stream.write(
                             f'{mod} = {{ path = "{module_dirs[mod]["path"]}" }}\n'
