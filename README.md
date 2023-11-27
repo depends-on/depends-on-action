@@ -86,7 +86,7 @@ jobs:
       # install the toolchain for your language
 
       - name: Extract dependent Pull Requests
-        uses: depends-on/depends-on-action@0.11.1
+        uses: depends-on/depends-on-action@0.12.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         # optional if needed for Gitlab
@@ -104,7 +104,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check all dependent Pull Requests are merged
-        uses: depends-on/depends-on-action@0.11.1
+        uses: depends-on/depends-on-action@0.12.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           check-unmerged-pr: true
