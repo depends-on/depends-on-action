@@ -24,7 +24,26 @@ If you need to specify a sub-directory for a particular Pull Request, use the fo
 Depends-On: <PR url>?subdir=<subdir path>
 ```
 
-This GitHub action then injects the needed changes in the code to use the other Pull Requests.
+This GitHub action then injects the needed modifications in the code to use the other changes.
+
+### Gerrit and Gitlab changes
+
+Gerrit and Gitlab dependencies are also supported. Examples:
+
+```txt
+Depends-On: https://gerrit-review.googlesource.com/c/gerrit/+/394841
+Depends-On: https://gitlab.com/adblockinc/ext/adblockplus/spec/-/merge_requests/428
+```
+
+The detection of the type of change is done in this order:
+
+1. If there is a `/c/` in the url, it is a Gerrit change.
+2. If there is `gitlab` in the hostname, it is a Gitlab change.
+3. It is a Github change.
+
+#### Gitlab credentials
+
+If you need credentials to access the Gitlab server, you can set the environment variables `GITLAB_TOKEN` and `GITLAB_USER` as secrets. Depending on the configuration of your server, you could only need `GITLAB_TOKEN`.
 
 ### Go lang
 
@@ -70,6 +89,10 @@ jobs:
         uses: depends-on/depends-on-action@0.11.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+        # optional if needed for Gitlab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_USER: ${{ secrets.GITLAB_USER }}
 
       # <your usual actions here>
 
@@ -85,18 +108,22 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           check-unmerged-pr: true
+        # optional if needed for Gitlab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_USER: ${{ secrets.GITLAB_USER }}
 ...
 ```
 
-You need two pipelines: one to do your regular builds and tests and the second to block until the dependent PR are merged.
+As demonstrated above, you need at least two pipelines: one or more to do your regular builds and tests injecting the dependent changes and, a specific one to block until the dependent changes are merged.
 
 ## Details
 
 - stage 1: [javascript program](index.js) to extract the dependency information from the main change.
-- stage 2: [depends_on_stage2 python program](depends_on_stage2) to extract the dependent pull requests
-- stage 3: [depends_on_stage3 python program](depends_on_stage3) to inject the dependencies into the main PR according to the detected programming languages.
+- stage 2: [depends_on_stage2 python program](depends_on_stage2) to extract the dependent changess
+- stage 3: [depends_on_stage3 python program](depends_on_stage3) to inject the dependencies into the main change according to the detected programming languages.
 
-When the action is called with the `check-unmerged-pr: true` setting, stages 1 and 2 are used but not stage 3. Stage 2, in this case, is not extracting the dependent PR on disk but just checking the merge status of all the dependent PR.
+When the action is called with the `check-unmerged-pr: true` setting, stages 1 and 2 are used but not stage 3. Stage 2, in this case, is not extracting the dependent changes on disk but just checking the merge status of all the dependent changes.
 
 ## Usage outside of a GitHub action
 
@@ -106,12 +133,20 @@ If you want to use the same dependency management in other CI pipelines or in a 
 $ pip install depends-on
 ```
 
-and use the `depends_on_stage1` script as an entry point taking a json file with the data from your Pull Request:
+and use the `depends_on_stage1` script as an entry point taking the URL of the change you want to download in parameter:
 
 ```shellsession
 $ cd <workspace>
-$ export GITHUB_LOGIN=<your token>
+$ export GITHUB_TOKEN=<your token>
+$ # if you need access to a private Gitlab server
+$ export GITLAB_USER=<your user>
+$ export GITLAB_TOKEN=<your gitlab token>
+$ # Extracting a Github change and its dependencies
 $ depends_on_stage1 https://github.com/depends-on/pyprog/pulls/2
+$ # Extracting a Gitlab change and its dependencies
+$ depends_on_stage1 https://gitlab.com/adblockinc/ext/adblockplus/spec/-/merge_requests/428
+$ # Extracting a Gerrit change and its dependencies
+$ depends_on_stage1 https://softwarefactory-project.io/r/c/dci-pipeline/+/29700
 ```
 
 ## Roadmap
@@ -122,13 +157,13 @@ $ depends_on_stage1 https://github.com/depends-on/pyprog/pulls/2
 - [x] [stage 3: python support](https://github.com/depends-on/depends-on-action/issues/8)
 - [x] [stage 3: python poetry support](https://github.com/depends-on/depends-on-action/issues/18)
 - [x] [stage 3: python subdir support](https://github.com/depends-on/depends-on-action/issues/19)
-- [x] [stage 3: Container support](https://github.com/depends-on/depends-on-action/issues/17)
+- [x] [stage 3: container support](https://github.com/depends-on/depends-on-action/issues/17)
 - [x] [stage 3: javascript support](https://github.com/depends-on/depends-on-action/issues/12)
 - [x] [python package on pypi](https://github.com/depends-on/depends-on-action/issues/31)
 - [x] [Non GitHub action usage](https://github.com/depends-on/depends-on-action/issues/32)
 - [x] [stage 2: gerrit support](https://github.com/depends-on/depends-on-action/issues/6)
+- [x] [stage 2: gitlab support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
-- [ ] [stage 2: Gitlab support](https://github.com/depends-on/depends-on-action/issues/5)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)

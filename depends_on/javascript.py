@@ -5,6 +5,8 @@ import json
 import os
 import sys
 
+from depends_on.common import log
+
 
 def load_package_json(package_json_path):
     """Load package.json file."""
@@ -28,18 +30,15 @@ def local_dependencies(dirs):
             package = load_package_json(package_json_path)
             deps[package["name"]] = dirs[local_dir]
             if "workspaces" in package and "packages" in package["workspaces"]:
-                print("detected workspaces", file=sys.stderr)
+                log("detected workspaces")
                 for workspace_glob in package["workspaces"]["packages"]:
-                    print(f"processing {workspace_glob}", file=sys.stderr)
+                    log(f"processing {workspace_glob}")
                     for workspace_dir in glob.glob(
                         os.path.join(local_path, workspace_glob)
                     ):
-                        print(f"found subdir={workspace_dir}", file=sys.stderr)
+                        log(f"found subdir={workspace_dir}")
                         workspace_path = os.path.join(local_path, workspace_dir)
-                        print(
-                            f"checking workspace {workspace_path} for package.json",
-                            file=sys.stderr,
-                        )
+                        log(f"checking workspace {workspace_path} for package.json")
                         workspace_package_json_path = os.path.join(
                             workspace_path, "package.json"
                         )
@@ -47,10 +46,7 @@ def local_dependencies(dirs):
                             workspace_package = load_package_json(
                                 workspace_package_json_path
                             )
-                            print(
-                                f"found package {workspace_package['name']}",
-                                file=sys.stderr,
-                            )
+                            log(f"found package {workspace_package['name']}")
                             deps[workspace_package["name"]] = {
                                 "path": workspace_path,
                                 "subdir": workspace_dir[len(local_path) + 1 :],
@@ -63,22 +59,20 @@ def local_dependencies(dirs):
 def process_dependencies(dependencies, dirs, container_mode, package_json_path):
     """Process dependencies in package.json and replace local dependencies"""
     local_deps = local_dependencies(dirs)
-    print(f"Found {len(local_deps)} local dependencies: {local_deps=}", file=sys.stderr)
+    log(f"Found {len(local_deps)} local dependencies: {local_deps=}")
     count = 0
     for dependency in dependencies:
         if dependency in local_deps:
             if container_mode:
                 info = local_deps[dependency]
                 repo = "git+" + info["fork_url"] + "#" + info["branch"]
-                print(
-                    f"Replacing {dependency} with remote version from {repo} in package.json",
-                    file=sys.stderr,
+                log(
+                    f"Replacing {dependency} with remote version from {repo} in package.json"
                 )
                 dependencies[dependency] = repo
             else:
-                print(
-                    f"Replacing {dependency} with local version from {local_deps[dependency]['path']} in package.json",
-                    file=sys.stderr,
+                log(
+                    f"Replacing {dependency} with local version from {local_deps[dependency]['path']} in package.json"
                 )
                 dependencies[dependency] = "file:" + local_deps[dependency]["path"]
             count += 1
@@ -90,9 +84,7 @@ def process_javascript(main_dir, dirs, container_mode):
     package_json_path = os.path.join(main_dir, "package.json")
     if not os.path.exists(package_json_path):
         return False
-    print(
-        "Detected package.json file, checking for local dependencies", file=sys.stderr
-    )
+    log("Detected package.json file, checking for local dependencies")
     package = load_package_json(package_json_path)
     if "dependencies" not in package:
         return False

@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+from depends_on.common import init_sensitive_strings, log
 from depends_on.golang import process_golang
 from depends_on.javascript import process_javascript
 from depends_on.python import process_python
@@ -68,17 +69,17 @@ def detect_container_mode(main_dir):
 
 def main():
     "Main function."
+
+    init_sensitive_strings()
+
     main_dir = os.getcwd()
     top_dir = os.path.dirname(main_dir)
 
     dirs = directories(top_dir, main_dir)
-    print(
-        f"{main_dir=} {top_dir=} {dirs=} called from {__file__}!",
-        file=sys.stderr,
-    )
+    log(f"{main_dir=} {top_dir=} {dirs=} called from {__file__}!")
 
     container_mode = detect_container_mode(main_dir)
-    print(f"{container_mode=}", file=sys.stderr)
+    log(f"{container_mode=}")
     process_golang(main_dir, dirs, container_mode)
     process_python(main_dir, dirs, container_mode)
     process_javascript(main_dir, dirs, container_mode)

@@ -4,6 +4,8 @@ import os
 import re
 import sys
 
+from depends_on.common import log
+
 
 def process_golang(main_dir, dirs, container_mode):
     "Add replace directives in go.mod for the local dependencies."
@@ -28,17 +30,15 @@ def process_golang(main_dir, dirs, container_mode):
                     .replace("https://", "", 1)
                     .replace(".git", "", 1)
                 )
-                print(
-                    f'Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]["branch"]}',
-                    file=sys.stderr,
+                log(
+                    f'Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]["branch"]}'
                 )
                 os.system(
                     f"set -x; go mod edit -replace {mod}={fork_url}@{dirs[mod]['branch']}"
                 )
             else:
-                print(
-                    f'Adding replace directive in go.mod for {mod} => {dirs[mod]["path"]}',
-                    file=sys.stderr,
+                log(
+                    f'Adding replace directive in go.mod for {mod} => {dirs[mod]["path"]}'
                 )
                 os.system(f"set -x; go mod edit -replace {mod}={dirs[mod]['path']}")
             nb_replace += 1
