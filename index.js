@@ -13,11 +13,12 @@ function myExecSync(cmd) {
 }
 
 async function run() {
-  try {
-    const token = core.getInput('token');
-    const checkUnmergedPr = core.getBooleanInput('check-unmerged-pr');
-    const context = github.context;
+  const token = core.getInput('token');
+  const checkUnmergedPr = core.getBooleanInput('check-unmerged-pr');
+  const extraDirs = core.getInput('extra-dirs');
+  const context = github.context;
 
+  try {
     if (!context.payload.pull_request) {
       console.log('Not a pull request. Skipping');
       return;
@@ -46,21 +47,34 @@ async function run() {
     }
 
     const changeJson = {
+      description: description,
       fork_url: mainPR.head.repo.clone_url,
       branch: mainPR.head.ref,
-      description: description
+      main_url: mainPR.base.repo.clone_url,
+      main_branch: mainPR.base.ref,
+      change_url: mainPR.html_url,
+      extra_dirs: extraDirs ? extraDirs.split(' ') : [],
     };
     fs.writeFileSync('depends-on.json', JSON.stringify(changeJson));
     console.log(`writing depends-on.json: ${JSON.stringify(changeJson)}`);
 
     // export token as the GITHUB_TOKEN env variable
     core.exportVariable('GITHUB_TOKEN', token);
+  } catch (error) {
+    core.setFailed(error.message);
+    process.exit(1);
+  }
 
+  try {
     // the bundle is in the dist sub-directory
     execSync(`${__dirname}/../depends_on_stage2 ${checkUnmergedPr}`, { encoding: 'utf-8' });
   } catch (error) {
-    console.log(error);
-    core.setFailed(error.message);
+    if (checkUnmergedPr) {
+      core.setFailed("Unmerged PRs found");
+    } else {
+      core.setFailed("stage 2 or 3 failed");
+    }
+    process.exit(1);
   }
 }
 

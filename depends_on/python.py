@@ -2,7 +2,6 @@
 
 import os
 import re
-import sys
 
 from depends_on.common import log
 

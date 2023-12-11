@@ -20,10 +20,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout code (2nd)
+        uses: actions/checkout@v4
+        with:
+          repository: depends-on/depends-on-action
+          path: second
+
+      - name: Checkout code (3rd)
+        uses: actions/checkout@v4
+        with:
+          repository: depends-on/depends-on-action
+          path: third
+
       - name: Inject dependent Pull Requests
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          extra-dirs: depends-on-action/second depends-on-action/third
 
       - name: Build python package
         run: |
