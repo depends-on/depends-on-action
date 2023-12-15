@@ -2,6 +2,7 @@
 
 "Stage1: extract the main change and call stage2."
 
+import argparse
 import os
 import sys
 
@@ -13,13 +14,22 @@ def main(args):
 
     init_sensitive_strings()
 
-    if len(args) != 2 or args[1] in ("-h", "--help"):
-        log(f"Usage: {args[0]} <CHANGE URL>")
-        return 0 if len(args) > 1 and args[1] in ("-h", "--help") else 1
+    # parse the command line
+    # -e or --extra-dir to add a directory to the list of directories to scan
+    # -h or --help to display the help
+    # 1 argument: the url of the change
+    extra_dirs = []
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "-e", "--extra-dir", action="append", dest="extra_dirs", default=[]
+    )
+    argparser.add_argument("url", nargs=1)
+    parsed_args = argparser.parse_args(args[1:])
+    url = parsed_args.url[0]
+    extra_dirs = parsed_args.extra_dirs
 
-    main_dir = os.getcwd()
-
-    _, top_dir = extract_depends_on(args[1], False)
+    _, data = extract_depends_on(url, False, extra_dirs)
+    top_dir = data["top_dir"]
 
     log(f"+ chdir {top_dir}")
     os.chdir(top_dir)
@@ -32,4 +42,4 @@ def main(args):
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
 
-# stage1.py ends here
+# depends_on_stage1 ends here

@@ -6,9 +6,18 @@ import json
 import os
 import re
 import sys
-from urllib.request import Request, urlopen
+import urllib.parse
 
-from depends_on.common import extract_depends_on, init_sensitive_strings, log
+from depends_on.common import (
+    command,
+    extract_depends_on,
+    extract_gerrit_change,
+    extract_github_change,
+    extract_gitlab_change,
+    init_sensitive_strings,
+    log,
+    save_depends_on,
+)
 
 
 def load_depends_on(from_dir):
@@ -18,6 +27,43 @@ def load_depends_on(from_dir):
 
     with open(fname, "r", encoding="UTF-8") as json_stream:
         return json.load(json_stream)
+
+
+def extract_origin_url(work_dir):
+    "Return the origin URL of the git repository in work_dir."
+    origin_url = os.popen(f"cd {work_dir} && git remote get-url origin").read().strip()
+    # convert ssh to https
+    if origin_url.startswith("git@"):
+        origin_url = origin_url.replace(":", "/", 1)
+        origin_url = origin_url.replace("git@", "https://")
+    # remove the .git suffix if any
+    if origin_url.endswith(".git"):
+        origin_url = origin_url[:-4]
+    return origin_url
+
+
+def extract_change(change_info, main_url, work_dir):
+    "Extract the change into the work_dir directory."
+    log(f"Extracting change {change_info=} into {work_dir}")
+    fork_url = change_info["fork_url"]
+    main_url = change_info["main_url"]
+    main_branch = change_info["main_branch"]
+    if "/c/" in fork_url:
+        return extract_gerrit_change(
+            fork_url, change_info["branch"], main_branch, work_dir
+        )
+    elif "gitlab" in urllib.parse.urlparse(fork_url).netloc:
+        return extract_gitlab_change(
+            main_url, fork_url, change_info["branch"], main_branch, work_dir
+        )
+    else:
+        return extract_github_change(
+            fork_url,
+            change_info["branch"],
+            main_url,
+            main_branch,
+            work_dir,
+        )
 
 
 def main(check_mode):
@@ -34,9 +80,14 @@ def main(check_mode):
         log("No description found.")
         return 0
 
-    depends_on = re.findall(
-        r"^Depends-On: (.*)", data["description"], re.IGNORECASE | re.MULTILINE
-    )
+    depends_on = [
+        u.strip().rstrip("\r")
+        for u in re.findall(
+            r"^Depends-On: (.*)",
+            data["description"],
+            re.IGNORECASE | re.MULTILINE,
+        )
+    ]
 
     if len(depends_on) == 0:
         log("No Depends-On found.")
@@ -48,8 +99,14 @@ def main(check_mode):
     os.chdir(os.path.join(main_dir, ".."))
 
     nb_unmerged_pr = 0
+    change_info = {data["change_url"]: data}
     for depends_on_url in depends_on:
-        merged, _ = extract_depends_on(depends_on_url.strip(), check_mode)
+        merged, depends_data = extract_depends_on(
+            depends_on_url,
+            check_mode,
+            data["extra_dirs"],
+        )
+        change_info[depends_on_url] = depends_data
         if not merged:
             nb_unmerged_pr += 1
 
@@ -70,15 +127,38 @@ def main(check_mode):
     if len(main_dir_res) > 0:
         main_dir = main_dir_res[-1].strip()
 
-    log(f"+ chdir {main_dir}")
-    os.chdir(main_dir)
+    top_dir = os.path.dirname(os.path.realpath(main_dir))
 
-    stage3 = os.path.join(os.path.dirname(__file__), "depends_on_stage3")
-    log(f"+ {stage3}")
-    os.execl(stage3, "depends_on_stage3")
+    log(f"change_info: {change_info}")
+
+    real_extra_dirs = []
+    for extra_dir in data["extra_dirs"]:
+        real_extra_dir = os.path.realpath(extra_dir)
+        if not os.path.isdir(real_extra_dir):
+            log(f"Extra directory {real_extra_dir} does not exist.")
+            return 1
+        save_depends_on(data, real_extra_dir)
+        real_extra_dirs.append(real_extra_dir)
+        # lookup if the remote of the directory is part of the depends_on
+        # if yes, then we need to extract the right branch
+        origin_url = extract_origin_url(real_extra_dir)
+        for depends_on_url in depends_on + [data["change_url"]]:
+            log(f"depends_on_url: {depends_on_url} {origin_url}")
+            if depends_on_url.startswith(origin_url):
+                log(f"extract {depends_on_url} in {real_extra_dir}")
+                extract_change(change_info[depends_on_url], origin_url, real_extra_dir)
+
+    for work_dir in [main_dir] + real_extra_dirs:
+        log(f"+ chdir {work_dir}")
+        os.chdir(work_dir)
+
+        stage3 = os.path.join(os.path.dirname(__file__), "depends_on_stage3")
+        command(f"{stage3} {top_dir}")
+
+    return 0
 
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1] == "true"))
 
-# stage2.py ends here
+# depends_on_stage2 ends here

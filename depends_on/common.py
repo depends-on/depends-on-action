@@ -42,8 +42,10 @@ def get_json_url(url, **headers):
 
 def save_depends_on(data, dirname):
     "Save the data to a JSON file."
+    depends_on_file = os.path.join(dirname, "depends-on.json")
+    log(f"Saving depends-on data to {depends_on_file}")
     with open(
-        os.path.join(dirname, "depends-on.json"),
+        depends_on_file,
         "w",
         encoding="UTF-8",
     ) as json_stream:
@@ -79,7 +81,7 @@ def get_gerrit_change_info(gerrit_url, gerrit_change_id):
     return change_info
 
 
-def extract_pull_request(depends_on_url, check_mode):
+def extract_pull_request(depends_on_url, check_mode, extra_dirs):
     "Extract the dependency by git cloning the repository in the right branch for the Pull request."
     # parse the URL to extract the repo, org and pr number
     # the format is https://github.com/<org>/<repo>/pull/<pr_number>?subdir=<subdir>&<key>=<value>
@@ -115,19 +117,22 @@ def extract_pull_request(depends_on_url, check_mode):
             "branch": pr_info["head"]["ref"],
             "main_url": pr_info["base"]["repo"]["clone_url"],
             "main_branch": pr_info["base"]["ref"],
-            "topdir": top_dir,
+            "top_dir": top_dir,
             "path": top_dir,
             "merged": pr_info["merged"],
+            "extra_dirs": extra_dirs,
+            "change_url": depends_on_url,
         }
         if "subdir" in pr_data:
             data["subdir"] = pr_data["subdir"]
             data["path"] = os.path.join(top_dir, pr_data["subdir"])
         save_depends_on(data, repo)
         log(f"PR data: {data}")
-    return pr_info["merged"], top_dir
+        return pr_info["merged"], data
+    return pr_info["merged"], {}
 
 
-def extract_gerrit_review(depends_on_url, check_mode):
+def extract_gerrit_review(depends_on_url, check_mode, extra_dirs):
     "Extract the dependency by git cloning the repository in the right branch for the Gerrit change."
     # Parse the URL to extract the url and change number.
     # The format is
@@ -170,13 +175,16 @@ def extract_gerrit_review(depends_on_url, check_mode):
                 "fetch"
             ]["anonymous http"]["url"],
             "main_branch": change_info["branch"],
-            "topdir": top_dir,
+            "top_dir": top_dir,
             "path": top_dir,
             "merged": change_info["status"] == "MERGED",
+            "extra_dirs": extra_dirs,
+            "change_url": depends_on_url,
         }
         save_depends_on(data, project)
         log(f"Change data: {data}")
-    return change_info["status"] == "MERGED", top_dir
+        return change_info["status"] == "MERGED", data
+    return change_info["status"] == "MERGED", {}
 
 
 def get_gitlab_project_info(gitlab_url, project, headers):
@@ -198,7 +206,7 @@ def get_gitlab_auth():
     return ""
 
 
-def extract_gitlab_merge_request(depends_on_url, check_mode):
+def extract_gitlab_merge_request(depends_on_url, check_mode, extra_dirs):
     "Extract a gitlab merge request"
     # Parse the URL to extract the project and merge request number.
     # The format is https://<server>/<project>/-/merge_requests/<mr_number>
@@ -247,30 +255,39 @@ def extract_gitlab_merge_request(depends_on_url, check_mode):
             "branch": mr_info["source_branch"],
             "main_url": f"{gitlab_url}{project}.git",
             "main_branch": mr_info["target_branch"],
-            "topdir": top_dir,
+            "top_dir": top_dir,
             "path": top_dir,
             "merged": mr_info["state"] == "merged",
+            "extra_dirs": extra_dirs,
+            "change_url": depends_on_url,
         }
         save_depends_on(data, base_project)
         log(f"Change data: {data}")
-    return mr_info["state"] == "merged", top_dir
+        return mr_info["state"] == "merged", data
+    return mr_info["state"] == "merged", {}
 
 
-def extract_depends_on(depends_on_url, check_mode):
+def extract_depends_on(depends_on_url, check_mode, extra_dirs):
     "Extract the dependency by git cloning the repository in the right branch."
     if "/c/" in depends_on_url:
-        return extract_gerrit_review(depends_on_url, check_mode)
+        return extract_gerrit_review(depends_on_url, check_mode, extra_dirs)
     elif "gitlab" in urllib.parse.urlparse(depends_on_url).netloc:
-        return extract_gitlab_merge_request(depends_on_url, check_mode)
+        return extract_gitlab_merge_request(depends_on_url, check_mode, extra_dirs)
     else:
-        return extract_pull_request(depends_on_url, check_mode)
+        return extract_pull_request(depends_on_url, check_mode, extra_dirs)
+
+
+def clone_repo(base_url, repo):
+    "Clone a git repository if the target directory doesn't exist."
+    if not os.path.isdir(repo):
+        command(f"git clone {base_url} {repo}")
 
 
 def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
-    "Extract the dependency by git cloning the repository in the right branch for the Merge request."
-    command(f"git clone --filter=tree:0 {base_url} {repo}")
+    "Extract the dependency by git cloning the repository in the right branch for the Merge Request."
+    clone_repo(base_url, repo)
     command(
-        f"cd {repo} && git fetch {change_url} {branch} && git checkout -b {branch} FETCH_HEAD"
+        f"cd {repo} && git remote add fork {change_url} && git fetch fork {branch} && git checkout -b mr/{branch} FETCH_HEAD"
     )
     merge_main_branch(repo, main_branch)
     return repo
@@ -278,19 +295,19 @@ def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
 
 def extract_github_change(fork_url, branch, main_url, main_branch, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Pull request."
-    command(f"git clone --filter=tree:0 {main_url} {repo}")
-    command(f"cd {repo} && git remote add pr {fork_url} && git fetch pr {branch}")
+    clone_repo(main_url, repo)
+    command(f"cd {repo} && git remote add fork {fork_url} && git fetch fork {branch}")
     # extract the master/main branch name
-    command(f"cd {repo} && git checkout -b {branch} --track pr/{branch}")
+    command(f"cd {repo} && git checkout -b pr/{branch} fork/{branch}")
     merge_main_branch(repo, main_branch)
     return repo
 
 
 def extract_gerrit_change(change_url, branch, main_branch, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Gerrit change."
-    command(f"git clone --filter=tree:0 {change_url} {repo}")
+    clone_repo(change_url, repo)
     command(
-        f"cd {repo} && git fetch {change_url} {branch} && git checkout -b {branch} FETCH_HEAD"
+        f"cd {repo} && git remote add fork {change_url} && git fetch fork {branch} && git checkout -b gr/{branch} FETCH_HEAD"
     )
     merge_main_branch(repo, main_branch)
     return repo
@@ -302,15 +319,20 @@ def merge_main_branch(repo, main_branch):
     command(
         f"cd {repo} && git config user.name 'Depends-On' && git config user.email 'depends-on@localhost' && git config commit.gpgsign false"
     )
+    # update the main branch for shallow clones
+    command(
+        f"cd {repo} && git fetch origin --no-depth {main_branch}:origin_{main_branch}"
+    )
     # merge the main branch into the current branch
-    command(f"cd {repo} && git merge origin/{main_branch} --no-edit")
+    command(f"cd {repo} && git merge origin_{main_branch} --no-edit")
     return repo
 
 
 def check_error(status, message):
     "Check the status and exit if it is false."
     if not status:
-        raise Exception(message)
+        log(message)
+        sys.exit(1)
 
 
 def command(cmd):

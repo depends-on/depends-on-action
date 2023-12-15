@@ -100,9 +100,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Check all dependent Pull Requests are merged
         uses: depends-on/depends-on-action@0.12.0
         with:
@@ -117,10 +114,47 @@ jobs:
 
 As demonstrated above, you need at least two pipelines: one or more to do your regular builds and tests injecting the dependent changes and, a specific one to block until the dependent changes are merged.
 
+### Multiple checkouts
+
+If your pipeline is cloning multiple git repositories, you could want to inject the dependencies in all these directories. To do so, use the `extra-dirs` option with space separated names of directories like this:
+
+```yaml
+---
+name: Pull Request
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  validate-tests:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check out an extra dir
+        uses: actions/checkout@v4
+        with:
+          repository: org/proj
+          path: proj
+
+      # install the toolchain for your language
+
+      - name: Extract dependent Pull Requests
+        uses: depends-on/depends-on-action@0.12.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          extra-dirs: org/proj
+
+      # <your usual actions here>
+      ...
+...
+```
+
 ## Details
 
 - stage 1: [javascript program](index.js) to extract the dependency information from the main change.
-- stage 2: [depends_on_stage2 python program](depends_on_stage2) to extract the dependent changess
+- stage 2: [depends_on_stage2 python program](depends_on_stage2) to extract the dependent changes.
 - stage 3: [depends_on_stage3 python program](depends_on_stage3) to inject the dependencies into the main change according to the detected programming languages.
 
 When the action is called with the `check-unmerged-pr: true` setting, stages 1 and 2 are used but not stage 3. Stage 2, in this case, is not extracting the dependent changes on disk but just checking the merge status of all the dependent changes.
@@ -163,6 +197,7 @@ $ depends_on_stage1 https://softwarefactory-project.io/r/c/dci-pipeline/+/29700
 - [x] [Non GitHub action usage](https://github.com/depends-on/depends-on-action/issues/32)
 - [x] [stage 2: gerrit support](https://github.com/depends-on/depends-on-action/issues/6)
 - [x] [stage 2: gitlab support](https://github.com/depends-on/depends-on-action/issues/5)
+- [x] [stage 2: multiple checkouts support](https://github.com/depends-on/depends-on-action/issues/39)
 - [ ] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)

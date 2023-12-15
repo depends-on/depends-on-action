@@ -14,6 +14,9 @@ inputs:
     description: 'Set to true to stop if there are unmerged PR'
     default: false
     type: boolean
+  extra-dirs:
+    description: 'Other git directories to process (space separated)'
+    type: string
 runs:
   using: 'node16'
   main: 'dist/index.js'

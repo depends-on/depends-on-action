@@ -3,7 +3,6 @@
 import glob
 import json
 import os
-import sys
 
 from depends_on.common import log
 

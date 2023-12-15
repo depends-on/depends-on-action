@@ -2,7 +2,6 @@
 
 import os
 import re
-import sys
 
 from depends_on.common import log
 
@@ -12,6 +11,7 @@ def process_golang(main_dir, dirs, container_mode):
     go_mod = os.path.join(main_dir, "go.mod")
     if not os.path.exists(go_mod):
         return False
+    log(f"processing {go_mod}")
     # get the list of github.com/... dependencies that are in the local dependencies
     github_mods = []
     with open(go_mod, "r", encoding="UTF-8") as in_stream:
