@@ -55,7 +55,11 @@ The action replaces entries in `requirements.txt` for a Python change with a `-e
 
 ### Javascript
 
-The action replaces entries in `package.json` for Javascript change with `file:<local change>`.
+The action replaces entries in `package.json` for a Javascript change with `file:<local change>`.
+
+### Ansible
+
+The action replaces entries in `requirements.yml` for an Ansible collection change.
 
 ### Container
 
@@ -198,7 +202,8 @@ $ depends_on_stage1 https://softwarefactory-project.io/r/c/dci-pipeline/+/29700
 - [x] [stage 2: gerrit support](https://github.com/depends-on/depends-on-action/issues/6)
 - [x] [stage 2: gitlab support](https://github.com/depends-on/depends-on-action/issues/5)
 - [x] [stage 2: multiple checkouts support](https://github.com/depends-on/depends-on-action/issues/39)
-- [ ] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
+- [x] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
+- [ ] [stage 2: support stacked changes](https://github.com/depends-on/depends-on-action/issues/40)
