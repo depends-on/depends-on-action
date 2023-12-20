@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+from depends_on.ansible import process_ansible
 from depends_on.common import init_sensitive_strings, log
 from depends_on.golang import process_golang
 from depends_on.javascript import process_javascript
@@ -87,6 +88,7 @@ def main(args):
     process_golang(main_dir, dirs, container_mode)
     process_python(main_dir, dirs, container_mode)
     process_javascript(main_dir, dirs, container_mode)
+    process_ansible(main_dir, dirs, container_mode)
 
     return 0
 
