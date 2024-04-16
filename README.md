@@ -37,9 +37,9 @@ Depends-On: https://gitlab.com/adblockinc/ext/adblockplus/spec/-/merge_requests/
 
 The detection of the type of change is done in this order:
 
-1. If there is a `/c/` in the url, it is a Gerrit change.
-2. If there is `gitlab` in the hostname, it is a Gitlab change.
-3. It is a Github change.
+1. If there is a `/c/` in the URL, it is a Gerrit change.
+2. If there is a `/-/merge_requests/` in the URL, it is a Gitlab change.
+3. Else it is a Github change.
 
 #### Gitlab credentials
 

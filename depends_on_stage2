@@ -6,7 +6,6 @@ import json
 import os
 import re
 import sys
-import urllib.parse
 
 from depends_on.common import (
     command,
@@ -15,6 +14,8 @@ from depends_on.common import (
     extract_github_change,
     extract_gitlab_change,
     init_sensitive_strings,
+    is_gerrit,
+    is_gitlab,
     log,
     save_depends_on,
 )
@@ -48,11 +49,11 @@ def extract_change(change_info, main_url, work_dir):
     fork_url = change_info["fork_url"]
     main_url = change_info["main_url"]
     main_branch = change_info["main_branch"]
-    if "/c/" in fork_url:
+    if is_gerrit(fork_url):
         return extract_gerrit_change(
             fork_url, change_info["branch"], main_branch, work_dir
         )
-    elif "gitlab" in urllib.parse.urlparse(fork_url).netloc:
+    elif is_gitlab(fork_url):
         return extract_gitlab_change(
             main_url, fork_url, change_info["branch"], main_branch, work_dir
         )
