@@ -1,6 +1,6 @@
 {
   "name": "depends-on",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "GitHub Action to install dependent Pull Requests",
   "main": "index.js",
   "repository": {
@@ -16,7 +16,8 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.1.1"
+    "@actions/github": "^5.1.1",
+    "npm": "^10.5.2"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.36.1"
