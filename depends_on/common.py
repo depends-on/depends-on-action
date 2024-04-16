@@ -280,7 +280,7 @@ def extract_depends_on(depends_on_url, check_mode, extra_dirs):
 def clone_repo(base_url, repo):
     "Clone a git repository if the target directory doesn't exist."
     if not os.path.isdir(repo):
-        command(f"git clone {base_url} {repo}")
+        command(f"git clone --filter=tree:0 {base_url} {repo}")
 
 
 def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
