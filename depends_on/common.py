@@ -269,9 +269,9 @@ def extract_gitlab_merge_request(depends_on_url, check_mode, extra_dirs):
 
 def extract_depends_on(depends_on_url, check_mode, extra_dirs):
     "Extract the dependency by git cloning the repository in the right branch."
-    if "/c/" in depends_on_url:
+    if is_gerrit(depends_on_url):
         return extract_gerrit_review(depends_on_url, check_mode, extra_dirs)
-    elif "gitlab" in urllib.parse.urlparse(depends_on_url).netloc:
+    elif is_gitlab(depends_on_url):
         return extract_gitlab_merge_request(depends_on_url, check_mode, extra_dirs)
     else:
         return extract_pull_request(depends_on_url, check_mode, extra_dirs)
@@ -340,6 +340,16 @@ def command(cmd):
     log(f"+ {cmd}")
     ret = os.system(cmd)
     check_error(ret == 0, f"Command failed with exit code {ret}")
+
+
+def is_gerrit(change_url):
+    "Check if the URL is a Gerrit URL."
+    return "/c/" in change_url
+
+
+def is_gitlab(change_url):
+    "Check if the URL is a Gitlab URL."
+    return "/-/merge_requests/" in change_url
 
 
 # common.py ends here
