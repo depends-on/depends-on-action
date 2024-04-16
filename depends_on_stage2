@@ -148,6 +148,10 @@ def main(check_mode):
                 log(f"extract {depends_on_url} in {real_extra_dir}")
                 extract_change(change_info[depends_on_url], origin_url, real_extra_dir)
 
+    # check that the yaml module is installed on MacOS
+    if sys.platform == "darwin":
+        command("python -c 'import yaml' || sudo pip install pyyaml")
+
     for work_dir in [main_dir] + real_extra_dirs:
         log(f"+ chdir {work_dir}")
         os.chdir(work_dir)
