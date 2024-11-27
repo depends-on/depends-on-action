@@ -92,9 +92,10 @@ def main(check_mode):
         )
     ]
 
-    # merge the main branch to be sure to test an up-to-date version
-    unshallow(".", data["main_branch"])
-    merge_main_branch(".", data["main_branch"])
+    if not check_mode:
+        # merge the main branch to be sure to test an up-to-date version
+        unshallow(".", data["main_branch"])
+        merge_main_branch(".", data["main_branch"])
 
     if len(depends_on) == 0:
         log("No Depends-On found.")
