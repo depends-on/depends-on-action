@@ -17,6 +17,9 @@ inputs:
   extra-dirs:
     description: 'Other git directories to process (space separated)'
     type: string
+  path:
+    description: 'path where the main PR has been extracted'
+    type: string
 runs:
   using: 'node20'
   main: 'dist/index.js'
