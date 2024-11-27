@@ -17,7 +17,9 @@ from depends_on.common import (
     is_gerrit,
     is_gitlab,
     log,
+    merge_main_branch,
     save_depends_on,
+    unshallow,
 )
 
 
@@ -89,6 +91,10 @@ def main(check_mode):
             re.IGNORECASE | re.MULTILINE,
         )
     ]
+
+    # merge the main branch to be sure to test an up-to-date version
+    unshallow(".", data["main_branch"])
+    merge_main_branch(".", data["main_branch"])
 
     if len(depends_on) == 0:
         log("No Depends-On found.")
