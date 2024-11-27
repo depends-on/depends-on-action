@@ -315,7 +315,7 @@ def extract_gerrit_change(change_url, branch, main_branch, repo):
 
 def unshallow(repo, branch):
     "Convert a shallow clone into a full clone."
-    command(f"cd {repo} && git fetch --unshallow origin {branch}")
+    command(f"cd {repo} && git fetch --unshallow origin {branch} || :")
     return repo
 
 

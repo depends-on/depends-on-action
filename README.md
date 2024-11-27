@@ -86,6 +86,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: my-path
 
       # install the toolchain for your language
 
@@ -93,6 +95,7 @@ jobs:
         uses: depends-on/depends-on-action@0.15.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          path: my-path
         # optional if needed for Gitlab
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}

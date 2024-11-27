@@ -16,6 +16,7 @@ async function run() {
   const token = core.getInput('token');
   const checkUnmergedPr = core.getBooleanInput('check-unmerged-pr');
   const extraDirs = core.getInput('extra-dirs');
+  const path = core.getInput('path');
   const context = github.context;
 
   try {
@@ -27,6 +28,11 @@ async function run() {
     const prNumber = context.payload.pull_request.number;
 
     console.log(`Pull Request number: ${prNumber} checkUnmergedPr=${checkUnmergedPr}`);
+
+    // change director if path is set
+    if (path) {
+      process.chdir(path);
+    }
 
     myExecSync('pwd');
 
