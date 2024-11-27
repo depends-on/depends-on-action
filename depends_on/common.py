@@ -313,6 +313,12 @@ def extract_gerrit_change(change_url, branch, main_branch, repo):
     return repo
 
 
+def unshallow(repo, branch):
+    "Convert a shallow clone into a full clone."
+    command(f"cd {repo} && git fetch --unshallow origin {branch}")
+    return repo
+
+
 def merge_main_branch(repo, main_branch):
     "Merge the main branch into the current branch."
     # set a dummy user name and email for the merge process to work
