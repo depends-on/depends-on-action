@@ -103,11 +103,9 @@ def extract_pull_request(depends_on_url, check_mode, extra_dirs):
     if not check_mode:
         # extract the dependency on disk
         extract_github_change(
-            pr_info["head"]["repo"]["clone_url"],
-            pr_info["head"]["ref"],
-            pr_info["base"]["repo"]["clone_url"],
-            pr_info["base"]["ref"],
-            repo,
+            main_url=pr_info["base"]["repo"]["clone_url"],
+            pr_number=pr_number,
+            repo=repo,
         )
 
         # save the information about the Pull request in depends-on.json
@@ -117,6 +115,7 @@ def extract_pull_request(depends_on_url, check_mode, extra_dirs):
             "branch": pr_info["head"]["ref"],
             "main_url": pr_info["base"]["repo"]["clone_url"],
             "main_branch": pr_info["base"]["ref"],
+            "pr_number": pr_number,
             "top_dir": top_dir,
             "path": top_dir,
             "merged": pr_info["merged"],
@@ -293,13 +292,17 @@ def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
     return repo
 
 
-def extract_github_change(fork_url, branch, main_url, main_branch, repo):
+def extract_github_change(main_url, pr_number, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Pull request."
     clone_repo(main_url, repo)
-    command(f"cd {repo} && git remote add fork {fork_url} && git fetch fork {branch}")
-    # extract the master/main branch name
-    command(f"cd {repo} && git checkout -b pr/{branch} fork/{branch}")
-    merge_main_branch(repo, main_branch)
+    cmd = f"""
+set -e
+cd {repo}
+git fetch origin pull/{pr_number}/head:{pr_number}
+git merge {pr_number} --no-edit
+"""
+
+    command(cmd.strip())
     return repo
 
 

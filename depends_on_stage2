@@ -51,6 +51,7 @@ def extract_change(change_info, main_url, work_dir):
     fork_url = change_info["fork_url"]
     main_url = change_info["main_url"]
     main_branch = change_info["main_branch"]
+    pr_number = change_info["pr_number"]
     if is_gerrit(fork_url):
         return extract_gerrit_change(
             fork_url, change_info["branch"], main_branch, work_dir
@@ -64,7 +65,7 @@ def extract_change(change_info, main_url, work_dir):
             fork_url,
             change_info["branch"],
             main_url,
-            main_branch,
+            pr_number,
             work_dir,
         )
 
