@@ -56,6 +56,7 @@ async function run() {
       description: description,
       fork_url: mainPR.head.repo.clone_url,
       branch: mainPR.head.ref,
+      pr_number: prNumber,
       main_url: mainPR.base.repo.clone_url,
       main_branch: mainPR.base.ref,
       change_url: mainPR.html_url,
