@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Stage3: inject the local dependencies into the main changeset.
-"""
+"""Stage3: inject the local dependencies into the main changeset."""
 
 import json
 import os
