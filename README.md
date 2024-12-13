@@ -210,3 +210,25 @@ $ depends_on_stage1 https://softwarefactory-project.io/r/c/dci-pipeline/+/29700
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
 - [ ] [stage 2: support stacked changes](https://github.com/depends-on/depends-on-action/issues/40)
+
+## Local development
+
+To run the action locally, you need to have the following tools installed:
+
+- [Node.js](https://nodejs.org/en/download/)
+- [Python 3](https://www.python.org/downloads/)
+- [uv](https://github.com/astral-sh/uv)
+
+Create your virtual environment and install the dependencies:
+
+```shellsession
+$ uv sync
+$ uv pip install -e .
+$ source .venv/bin/activate
+```
+
+Run unit tests:
+
+```shellsession
+$ uv run pytest -vv tests/
+```

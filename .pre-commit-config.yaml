@@ -11,18 +11,15 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.3
     hooks:
-      - id: black
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        args:
-          - "--profile"
-          - "black"
+      # Run the linter with import sorting.
+      - id: ruff
+        args: [--fix, --select, I]
+      # Check the format.
+      - id: ruff-format
+        args: [--check]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.5
@@ -44,5 +41,3 @@ repos:
         entry: make
         language: system
         pass_filenames: false
-
-...
