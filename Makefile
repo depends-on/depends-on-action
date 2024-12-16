@@ -1,7 +1,13 @@
-all: package-lock.json dist/index.js
+all: dist/index.js
+
+dist/index.js: index.js package.json
+	npm install
+	npm run build
 
 package-lock.json: package.json
 	npm install
 
-dist/index.js: index.js package-lock.json
-	npm run build
+clean:
+	rm -rf node_modules dist package-lock.json
+
+.PHONY: all clean
