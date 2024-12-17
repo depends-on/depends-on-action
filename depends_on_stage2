@@ -65,8 +65,6 @@ def extract_change(change_info, main_url, work_dir):
         )
     else:
         return extract_github_change(
-            fork_url,
-            change_info["branch"],
             main_url,
             pr_number,
             work_dir,
