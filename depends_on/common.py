@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 from urllib.request import Request, urlopen
@@ -347,8 +348,14 @@ def check_error(status, message):
 def command(cmd):
     "Execute a command"
     log(f"+ {cmd}")
-    ret = os.system(cmd)
-    check_error(ret == 0, f"Command failed with exit code {ret}")
+    try:
+        _ = subprocess.run(
+            cmd, shell=True, stderr=subprocess.PIPE, text=True, check=True
+        )
+    except subprocess.CalledProcessError as e:
+        log(f"Command failed with exit code {e.returncode}")
+        log(e.stderr)
+        sys.exit(1)
 
 
 def is_gerrit(change_url):
