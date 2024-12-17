@@ -157,16 +157,64 @@ def main(check_mode):
                 log(f"extract {depends_on_url} in {real_extra_dir}")
                 extract_change(change_info[depends_on_url], origin_url, real_extra_dir)
 
-    # check that the yaml module is installed on MacOS
-    if sys.platform == "darwin":
-        command("python -c 'import yaml' || sudo pip install pyyaml")
-
     for work_dir in [main_dir] + real_extra_dirs:
         log(f"+ chdir {work_dir}")
         os.chdir(work_dir)
 
         stage3 = os.path.join(os.path.dirname(__file__), "depends_on_stage3")
-        command(f"{stage3} {top_dir}")
+
+        # On macOS runners, the system Python is accessible via "python" where "python3" points to
+        # the one from Homebrew. The system Python can install package via pip but not the Homebrew
+        # one. In Homebrew, pyyaml has been disabled because it does not meet homebrew/core's
+        # requirements for Python library formulae! It was disabled on 2024-10-06. See
+        # https://github.com/orgs/Homebrew/discussions/5707. Also, the package will never be
+        # installed by default in the runner see
+        # https://github.com/actions/runner-images/issues/7962.
+        #
+        # We must either need to:
+        #   - install pyyaml via the system Python and call stage3 script with the system Python
+        #     instead of using "/usr/bin/env python3", so forcing like so: "python
+        #     depends_on_stage3.py"
+        #   - install pyyaml in a virtualenv so that the Homebrew Python can access it
+        #   - break system package with "pip3 install --break-system-packages PyYAML"
+        #
+        # We choose to go with the virtualenv approach since it's less intrusive.
+        # On macOS runners '/usr/bin/env python3' is the brew python not the system one.
+        #
+        # bash-3.2$ python
+        # Python 3.13.1 (v3.13.1:06714517797, Dec  3 2024, 14:00:22) [Clang 15.0.0 (clang-1500.3.9.4)] on darwin
+        # Type "help", "copyright", "credits" or "license" for more information.
+        # >>> __file__
+        # '/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/_pyrepl/__main__.py'
+        #
+        #
+        # bash-3.2$ /usr/bin/env python3
+        # Python 3.13.1 (main, Dec  3 2024, 17:59:52) [Clang 16.0.0 (clang-1600.0.26.4)] on darwin
+        # Type "help", "copyright", "credits" or "license" for more information.
+        # >>> __file__
+        # '/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/_pyrepl/__main__.py'
+        #
+        if sys.platform == "darwin" and os.getenv("GITHUB_ACTIONS") == "true":
+            # do everything at once so that we don't have to re-activate the venv
+            cmd = f"""
+if ! python3 -c 'import yaml'; then
+    echo "PyYAML not available, installing it in a virtual env"
+    python3 -m venv depends-on-venv
+    source depends-on-venv/bin/activate
+    python3 -m pip install PyYAML
+fi
+{stage3} {top_dir}
+if [ -d depends-on-venv ]; then
+    echo "deactivating and purging 'depends-on-venv' virtual env"
+    if type deactivate >/dev/null 2>&1; then
+        deactivate
+    fi
+    rm -rf depends-on-venv
+fi
+"""
+            command(cmd)
+        else:
+            command(f"{stage3} {top_dir}")
 
     return 0
 
