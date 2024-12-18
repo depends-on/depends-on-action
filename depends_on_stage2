@@ -13,6 +13,7 @@ from depends_on.common import (
     extract_gerrit_change,
     extract_github_change,
     extract_gitlab_change,
+    filter_comments,
     init_sensitive_strings,
     is_gerrit,
     is_gitlab,
@@ -29,7 +30,9 @@ def load_depends_on(from_dir):
     fname = os.path.join(from_dir, "depends-on.json")
 
     with open(fname, "r", encoding="UTF-8") as json_stream:
-        return json.load(json_stream)
+        data = json.load(json_stream)
+
+    return filter_comments(data)
 
 
 def extract_origin_url(work_dir):
