@@ -13,7 +13,6 @@ jobs:
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, macos-latest]
     steps:
-
       - name: Python3 version
         run: python3 --version
 
@@ -38,12 +37,20 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           extra-dirs: depends-on-action/second depends-on-action/third
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Build python package
         run: |
-          set -xe
-          if [ "$(uname -o)" == "GNU/Linux" ]; then
-            pip3 install setuptools wheel
-            python3 setup.py sdist bdist_wheel
-          fi
+          uv sync
+          uv venv
+          source .venv/bin/activate
+          uv pip install setuptools wheel pytest
+          uv run python3 setup.py sdist bdist_wheel
+          uv pip install dist/*.whl
+
+      - name: Run unit tests
+        run: |
+          uv run pytest -vv tests/
 
 ...

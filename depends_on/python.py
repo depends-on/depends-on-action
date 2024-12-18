@@ -6,8 +6,19 @@ import re
 from depends_on.common import log
 
 
-def lookup_name(fname):
-    "Lookup the name of a module"
+def lookup_pyproject_name(fname) -> str:
+    "Lookup the name of a module in a pyproject.toml file."
+    with open(fname, "r", encoding="UTF-8") as in_stream:
+        for line in in_stream.readlines():
+            match = re.match(r"^\s*name\s*=\s*['\"](.*?)['\"]\s*$", line)
+            if match:
+                return match.group(1)
+        if not match:
+            raise KeyError("name not found in pyproject.toml")
+
+
+def lookup_setuppy_name(fname) -> str:
+    "Lookup the name of a module in a setup.py file."
     if os.path.exists(fname):
         log(f"Looking up name in {fname}")
         with open(fname, "r", encoding="UTF-8") as in_stream:
@@ -22,9 +33,9 @@ def get_modules(dirs):
     "Get the dictionary of python modules from the local dependencies."
     python_mods = {}
     for _dir in dirs:
-        name = lookup_name(os.path.join(dirs[_dir]["path"], "setup.py")) or lookup_name(
-            os.path.join(dirs[_dir]["path"], "pyproject.toml")
-        )
+        name = lookup_setuppy_name(
+            os.path.join(dirs[_dir]["path"], "setup.py")
+        ) or lookup_pyproject_name(os.path.join(dirs[_dir]["path"], "pyproject.toml"))
         if name:
             python_mods[name] = dirs[_dir]
     return python_mods
@@ -38,6 +49,9 @@ def process_python_requirements(main_dir, dirs, container_mode):
         return False
     log("requirements.txt detected")
     module_dirs = get_modules(dirs)
+    if len(module_dirs) == 0:
+        raise ValueError("No Python modules found in the project")
+
     log(f"{module_dirs=}")
     # replace the modules in requirements.txt
     nb_replace = 0
