@@ -55,7 +55,7 @@ def local_dependencies(dirs):
     return deps
 
 
-def process_dependencies(dependencies, dirs, container_mode, package_json_path):
+def process_dependencies(dependencies, dirs, container_mode):
     """Process dependencies in package.json and replace local dependencies"""
     local_deps = local_dependencies(dirs)
     log(f"Found {len(local_deps)} local dependencies: {local_deps=}")
@@ -88,12 +88,10 @@ def process_javascript(main_dir, dirs, container_mode):
     if "dependencies" not in package:
         return False
     dependencies = package["dependencies"]
-    count = process_dependencies(dependencies, dirs, container_mode, package_json_path)
+    count = process_dependencies(dependencies, dirs, container_mode)
     if "devDependencies" in package:
         dependencies = package["devDependencies"]
-        count += process_dependencies(
-            dependencies, dirs, container_mode, package_json_path
-        )
+        count += process_dependencies(dependencies, dirs, container_mode)
     with open(package_json_path, "w", encoding="UTF-8") as package_json:
         json.dump(package, package_json, indent=2)
     return count > 0

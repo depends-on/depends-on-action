@@ -57,7 +57,7 @@ def process_ansible(main_dir, dirs, container_mode):
         requirements = yaml.safe_load(in_stream)
     # add the dependencies from dirs
     nb_replace = 0
-    for repo_name, info in dirs.items():
+    for _, info in dirs.items():
         collection_name = get_collection_name(info["path"])
         nb_replace += substitute_collection(
             collection_name, info, requirements, container_mode
