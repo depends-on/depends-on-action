@@ -361,4 +361,13 @@ def is_gitlab(change_url):
     return "/-/merge_requests/" in change_url
 
 
+def filter_comments(data):
+    "Filter out the comments from the description"
+    if "description" in data:
+        data["description"] = re.sub(
+            r"<!--.*?-->", "", data["description"], flags=re.DOTALL
+        )
+    return data
+
+
 # common.py ends here
