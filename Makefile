@@ -1,6 +1,7 @@
 all: dist/index.js
 
 dist/index.js: index.js package.json
+	ls -l index.js package.json dist/index.js
 	npm install
 	npm run build
 

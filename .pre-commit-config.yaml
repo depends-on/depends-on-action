@@ -3,6 +3,15 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 
+  - repo: local
+    hooks:
+      - id: build
+        name: Build file for distribution
+        description: Create distribution files
+        entry: make
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -32,12 +41,3 @@ repos:
     hooks:
       - id: pymarkdown
         args: ["-d", "md014,md013", "scan"]
-
-  - repo: local
-    hooks:
-      - id: build
-        name: Build file for distribution
-        description: Create distribution files
-        entry: make
-        language: system
-        pass_filenames: false
