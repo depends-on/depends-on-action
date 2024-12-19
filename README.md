@@ -208,7 +208,7 @@ $ depends_on_stage1 https://softwarefactory-project.io/r/c/dci-pipeline/+/29700
 - [x] [stage 3: ansible support](https://github.com/depends-on/depends-on-action/issues/9)
 - [ ] [stage 3: custom injection](https://github.com/depends-on/depends-on-action/issues/4)
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
-- [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
+- [x] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
 - [ ] [stage 2: support stacked changes](https://github.com/depends-on/depends-on-action/issues/40)
 
 ## Local development

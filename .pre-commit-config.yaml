@@ -34,7 +34,7 @@ repos:
     rev: v2.2.5
     hooks:
       - id: codespell
-        args: ["--skip=dist/*"]
+        args: ["--skip=dist/*", "--ignore-words=.spellcheck-en-custom.txt"]
 
   - repo: https://github.com/jackdewinter/pymarkdown
     rev: v0.9.12

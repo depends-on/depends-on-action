@@ -11,6 +11,7 @@ from depends_on.common import init_sensitive_strings, log
 from depends_on.golang import process_golang
 from depends_on.javascript import process_javascript
 from depends_on.python import process_python
+from depends_on.rust import process_rust
 
 
 def extract_repo_name(url):
@@ -88,6 +89,7 @@ def main(args):
     process_python(main_dir, dirs, container_mode)
     process_javascript(main_dir, dirs, container_mode)
     process_ansible(main_dir, dirs, container_mode)
+    process_rust(main_dir, dirs, container_mode)
 
     return 0
 
