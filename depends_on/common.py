@@ -285,9 +285,17 @@ def clone_repo(base_url, repo):
 def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Merge Request."
     clone_repo(base_url, repo)
-    command(
-        f"cd {repo} && git remote add fork {change_url} && git fetch fork {branch} && git checkout -b mr/{branch} FETCH_HEAD"
-    )
+
+    add_fork_remote(repo, change_url)
+
+    cmd = f"""
+set -e
+cd {repo}
+git fetch fork {branch}
+git checkout -b mr/{branch} FETCH_HEAD
+"""
+
+    command(cmd.strip())
     merge_main_branch(repo, main_branch)
     return repo
 
@@ -304,6 +312,24 @@ git merge {pr_number} --no-edit
 
     command(cmd.strip())
     return repo
+
+
+def add_fork_remote(repo, fork_url):
+    "Add a fork remote to a repository."
+
+    cmd = f"""
+set -e
+cd {repo}
+if git remote show fork &>/dev/null; then
+    echo "remote fork already exists, removing it"
+    echo "this is likely a stacked-dependency scenario"
+    git remote remove fork
+fi
+
+echo "Adding remote fork"
+git remote add fork {fork_url}
+"""
+    command(cmd.strip())
 
 
 def extract_gerrit_change(change_url, branch, main_branch, repo):

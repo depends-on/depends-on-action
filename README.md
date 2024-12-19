@@ -183,7 +183,7 @@ $ # if you need access to a private Gitlab server
 $ export GITLAB_USER=<your user>
 $ export GITLAB_TOKEN=<your gitlab token>
 $ # Extracting a Github change and its dependencies
-$ depends_on_stage1 https://github.com/depends-on/pyprog/pulls/2
+$ depends_on_stage1 https://github.com/depends-on/pyprog/pull/2
 $ # Extracting a Gitlab change and its dependencies
 $ depends_on_stage1 https://gitlab.com/adblockinc/ext/adblockplus/spec/-/merge_requests/428
 $ # Extracting a Gerrit change and its dependencies
@@ -210,6 +210,7 @@ $ depends_on_stage1 https://softwarefactory-project.io/r/c/dci-pipeline/+/29700
 - [ ] [stage 2: extract private PR](https://github.com/depends-on/depends-on-action/issues/7)
 - [ ] [stage 3: rust support](https://github.com/depends-on/depends-on-action/issues/11)
 - [ ] [stage 2: support stacked changes](https://github.com/depends-on/depends-on-action/issues/40)
+- [x] [stage 2: support stacked changes](https://github.com/depends-on/depends-on-action/issues/40)
 
 ## Local development
 
