@@ -65,12 +65,15 @@ def extract_change(change_info, main_url, work_dir):
         )
     else:
         return extract_github_change(
-            fork_url,
-            change_info["branch"],
             main_url,
             pr_number,
             work_dir,
         )
+
+
+def extract_default_branch(work_dir) -> str:
+    "Return the default branch of the git repository in work_dir."
+    return os.popen(f"cd {work_dir} && git rev-parse --abbrev-ref HEAD").read().strip()
 
 
 def main(check_mode):
@@ -154,6 +157,10 @@ def main(check_mode):
         # lookup if the remote of the directory is part of the depends_on
         # if yes, then we need to extract the right branch
         origin_url = extract_origin_url(real_extra_dir)
+        if not check_mode:
+            main_branch = extract_default_branch(real_extra_dir)
+            unshallow(real_extra_dir, main_branch)
+            merge_main_branch(real_extra_dir, main_branch)
         for depends_on_url in depends_on + [data["change_url"]]:
             log(f"depends_on_url: {depends_on_url} {origin_url}")
             if depends_on_url.startswith(origin_url):
