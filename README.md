@@ -92,7 +92,7 @@ jobs:
       # install the toolchain for your language
 
       - name: Extract dependent Pull Requests
-        uses: depends-on/depends-on-action@0.15.0
+        uses: depends-on/depends-on-action@0.16.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: my-path
@@ -108,7 +108,7 @@ jobs:
     steps:
 
       - name: Check all dependent Pull Requests are merged
-        uses: depends-on/depends-on-action@0.15.0
+        uses: depends-on/depends-on-action@0.16.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           check-unmerged-pr: true
@@ -148,7 +148,7 @@ jobs:
       # install the toolchain for your language
 
       - name: Extract dependent Pull Requests
-        uses: depends-on/depends-on-action@0.15.0
+        uses: depends-on/depends-on-action@0.16.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           extra-dirs: org/proj
