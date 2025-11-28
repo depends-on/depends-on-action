@@ -326,7 +326,7 @@ def merge_main_branch(repo, main_branch):
     "Merge the main branch into the current branch."
     # set a dummy user name and email for the merge process to work
     command(
-        f"cd {repo} && git config user.name 'Depends-On' && git config user.email 'depends-on@localhost' && git config commit.gpgsign false"
+        f"cd {repo} && git config --global user.name 'Depends-On' && git config --global user.email 'depends-on@localhost' && git config commit.gpgsign false"
     )
     # update the main branch for shallow clones
     command(
