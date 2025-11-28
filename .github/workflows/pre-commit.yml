@@ -34,3 +34,8 @@ jobs:
       - name: Run pre-commit
         run: |
           uv run pre-commit run --all-files
+
+      - name: git status and diff
+        run: |
+          git status
+          git diff --staged
