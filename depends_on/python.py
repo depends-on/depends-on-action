@@ -102,11 +102,9 @@ def process_python_pyproject(main_dir, dirs, container_mode):
                     mod = match.group(1)
                     if container_mode:
                         # doc at https://python-poetry.org/docs/dependency-specification/#git-dependencies
-                        pkg = f"{mod} = {{ git = \"{module_dirs[mod]['fork_url']}\", branch = \"{module_dirs[mod]['branch']}\""
+                        pkg = f'{mod} = {{ git = "{module_dirs[mod]["fork_url"]}", branch = "{module_dirs[mod]["branch"]}"'
                         if "subdir" in module_dirs[mod]:
-                            pkg += (
-                                f", subdirectory = \"{module_dirs[mod]['subdir']}\" }}"
-                            )
+                            pkg += f', subdirectory = "{module_dirs[mod]["subdir"]}" }}'
                         else:
                             pkg += " }"
                         log(f"Replacing {mod} in pyproject.toml with {pkg}")

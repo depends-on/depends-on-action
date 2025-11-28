@@ -84,14 +84,14 @@ def process_golang(main_dir, dirs, container_mode):
                     .replace(".git", "", 1)
                 )
                 log(
-                    f'Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]["branch"]}'
+                    f"Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]['branch']}"
                 )
                 os.system(
                     f"set -x; go mod edit -replace {mod}={fork_url}@{dirs[mod]['branch']}"
                 )
             else:
                 log(
-                    f'Adding replace directive in go.mod for {mod} => {dirs[mod]["path"]}'
+                    f"Adding replace directive in go.mod for {mod} => {dirs[mod]['path']}"
                 )
                 os.system(f"set -x; go mod edit -replace {mod}={dirs[mod]['path']}")
             nb_replace += 1
