@@ -21,7 +21,7 @@ inputs:
     description: 'path where the main PR has been extracted'
     type: string
 runs:
-  using: 'node20'
+  using: 'node22'
   main: 'dist/index.js'
 
 ...
