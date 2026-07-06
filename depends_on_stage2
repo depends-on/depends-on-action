@@ -5,6 +5,7 @@
 import json
 import os
 import re
+import subprocess
 import sys
 
 from depends_on.common import (
@@ -37,7 +38,12 @@ def load_depends_on(from_dir):
 
 def extract_origin_url(work_dir):
     "Return the origin URL of the git repository in work_dir."
-    origin_url = os.popen(f"cd {work_dir} && git remote get-url origin").read().strip()
+    origin_url = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=work_dir,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
     # convert ssh to https
     if origin_url.startswith("git@"):
         origin_url = origin_url.replace(":", "/", 1)
@@ -198,26 +204,27 @@ def main(check_mode):
         # '/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/_pyrepl/__main__.py'
         #
         if sys.platform == "darwin" and os.getenv("GITHUB_ACTIONS") == "true":
-            # do everything at once so that we don't have to re-activate the venv
-            cmd = f"""
-if ! python3 -c 'import yaml'; then
-    echo "PyYAML not available, installing it in a virtual env"
-    python3 -m venv depends-on-venv
-    source depends-on-venv/bin/activate
-    python3 -m pip install PyYAML
-fi
-{stage3} {top_dir}
-if [ -d depends-on-venv ]; then
-    echo "deactivating and purging 'depends-on-venv' virtual env"
-    if type deactivate >/dev/null 2>&1; then
-        deactivate
-    fi
-    rm -rf depends-on-venv
-fi
-"""
-            command(cmd)
+            # On macOS runners, pyyaml may not be available via the default python3
+            try:
+                import yaml  # noqa: F401
+            except ImportError:
+                log("PyYAML not available, installing it in a virtual env")
+                import venv
+
+                venv_dir = os.path.join(work_dir, "depends-on-venv")
+                venv.create(venv_dir, with_pip=True)
+                venv_python = os.path.join(venv_dir, "bin", "python3")
+                subprocess.run(
+                    [venv_python, "-m", "pip", "install", "PyYAML"], check=True
+                )
+                subprocess.run([venv_python, stage3, top_dir], check=True)
+                import shutil
+
+                shutil.rmtree(venv_dir, ignore_errors=True)
+                continue
+            command([stage3, top_dir])
         else:
-            command(f"{stage3} {top_dir}")
+            command([stage3, top_dir])
 
     return 0
 

@@ -2,6 +2,7 @@
 
 import os
 import re
+import subprocess
 
 from depends_on.common import log
 
@@ -86,18 +87,28 @@ def process_golang(main_dir, dirs, container_mode):
                 log(
                     f"Adding replace directive in go.mod for {mod} => {fork_url} {dirs[mod]['branch']}"
                 )
-                os.system(
-                    f"set -x; go mod edit -replace {mod}={fork_url}@{dirs[mod]['branch']}"
+                subprocess.run(
+                    [
+                        "go",
+                        "mod",
+                        "edit",
+                        "-replace",
+                        f"{mod}={fork_url}@{dirs[mod]['branch']}",
+                    ],
+                    check=True,
                 )
             else:
                 log(
                     f"Adding replace directive in go.mod for {mod} => {dirs[mod]['path']}"
                 )
-                os.system(f"set -x; go mod edit -replace {mod}={dirs[mod]['path']}")
+                subprocess.run(
+                    ["go", "mod", "edit", "-replace", f"{mod}={dirs[mod]['path']}"],
+                    check=True,
+                )
             nb_replace += 1
     # if there is any change to go.mod, `go mod tidy` needs to be called to have a correct go.sums
     if nb_replace > 0:
-        os.system("set -x; go mod tidy")
+        subprocess.run(["go", "mod", "tidy"], check=True)
     return nb_replace > 0
 
 

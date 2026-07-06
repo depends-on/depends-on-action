@@ -3,6 +3,8 @@
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 import urllib.parse
 from urllib.request import Request, urlopen
@@ -279,15 +281,15 @@ def extract_depends_on(depends_on_url, check_mode, extra_dirs):
 def clone_repo(base_url, repo):
     "Clone a git repository if the target directory doesn't exist."
     if not os.path.isdir(repo):
-        command(f"git clone --filter=tree:0 {base_url} {repo}")
+        command(["git", "clone", "--filter=tree:0", base_url, repo])
 
 
 def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Merge Request."
     clone_repo(base_url, repo)
-    command(
-        f"cd {repo} && git remote add fork {change_url} && git fetch fork {branch} && git checkout -b mr/{branch} FETCH_HEAD"
-    )
+    command(["git", "remote", "add", "fork", change_url], cwd=repo)
+    command(["git", "fetch", "fork", branch], cwd=repo)
+    command(["git", "checkout", "-b", f"mr/{branch}", "FETCH_HEAD"], cwd=repo)
     merge_main_branch(repo, main_branch)
     return repo
 
@@ -295,45 +297,46 @@ def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
 def extract_github_change(main_url, pr_number, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Pull request."
     clone_repo(main_url, repo)
-    cmd = f"""
-set -e
-cd {repo}
-git fetch origin pull/{pr_number}/head:{pr_number}
-git merge {pr_number} --no-edit
-"""
-
-    command(cmd.strip())
+    command(
+        ["git", "fetch", "origin", f"pull/{pr_number}/head:{pr_number}"], cwd=repo
+    )
+    command(["git", "merge", pr_number, "--no-edit"], cwd=repo)
     return repo
 
 
 def extract_gerrit_change(change_url, branch, main_branch, repo):
     "Extract the dependency by git cloning the repository in the right branch for the Gerrit change."
     clone_repo(change_url, repo)
-    command(
-        f"cd {repo} && git remote add fork {change_url} && git fetch fork {branch} && git checkout -b gr/{branch} FETCH_HEAD"
-    )
+    command(["git", "remote", "add", "fork", change_url], cwd=repo)
+    command(["git", "fetch", "fork", branch], cwd=repo)
+    command(["git", "checkout", "-b", f"gr/{branch}", "FETCH_HEAD"], cwd=repo)
     merge_main_branch(repo, main_branch)
     return repo
 
 
 def unshallow(repo, branch):
     "Convert a shallow clone into a full clone."
-    command(f"cd {repo} && git fetch --unshallow origin {branch} || :")
+    # --unshallow fails on non-shallow clones, which is expected
+    log(f"+ {shlex.join(['git', 'fetch', '--unshallow', 'origin', branch])}")
+    subprocess.run(["git", "fetch", "--unshallow", "origin", branch], cwd=repo)
     return repo
 
 
 def merge_main_branch(repo, main_branch):
     "Merge the main branch into the current branch."
     # set a dummy user name and email for the merge process to work
+    command(["git", "config", "--global", "user.name", "Depends-On"], cwd=repo)
     command(
-        f"cd {repo} && git config --global user.name 'Depends-On' && git config --global user.email 'depends-on@localhost' && git config commit.gpgsign false"
+        ["git", "config", "--global", "user.email", "depends-on@localhost"], cwd=repo
     )
+    command(["git", "config", "commit.gpgsign", "false"], cwd=repo)
     # update the main branch for shallow clones
     command(
-        f"cd {repo} && git fetch origin --no-depth {main_branch}:origin_{main_branch}"
+        ["git", "fetch", "origin", "--no-depth", f"{main_branch}:origin_{main_branch}"],
+        cwd=repo,
     )
     # merge the main branch into the current branch
-    command(f"cd {repo} && git merge origin_{main_branch} --no-edit")
+    command(["git", "merge", f"origin_{main_branch}", "--no-edit"], cwd=repo)
     return repo
 
 
@@ -344,11 +347,11 @@ def check_error(status, message):
         sys.exit(1)
 
 
-def command(cmd):
+def command(cmd, cwd=None):
     "Execute a command"
-    log(f"+ {cmd}")
-    ret = os.system(cmd)
-    check_error(ret == 0, f"Command failed with exit code {ret}")
+    log(f"+ {shlex.join(cmd)}")
+    ret = subprocess.run(cmd, cwd=cwd)
+    check_error(ret.returncode == 0, f"Command failed with exit code {ret.returncode}")
 
 
 def is_gerrit(change_url):
