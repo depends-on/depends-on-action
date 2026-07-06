@@ -8,7 +8,8 @@ repos:
       - id: build
         name: Build file for distribution
         description: Create distribution files
-        entry: make
+        # avoid failing if 'make' generates new files so staged them
+        entry: bash -c 'make && if [ -n "$GITHUB_ACTIONS" ]; then git add --update; fi' --
         language: system
         pass_filenames: false
 
