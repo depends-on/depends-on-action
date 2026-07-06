@@ -43,7 +43,6 @@ jobs:
       - name: Build python package
         run: |
           uv sync
-          uv venv
           source .venv/bin/activate
           uv pip install setuptools wheel pytest
           uv run python3 setup.py sdist bdist_wheel
