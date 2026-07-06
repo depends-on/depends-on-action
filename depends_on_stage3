@@ -4,6 +4,7 @@
 
 import json
 import os
+import subprocess
 import sys
 
 from depends_on.ansible import process_ansible
@@ -24,7 +25,12 @@ def extract_repo_name(url):
 
 def get_remote_url(proj_dir):
     "Return the remote URL of the git repository in proj_dir."
-    origin_url = os.popen(f"cd {proj_dir} && git remote get-url origin").read().strip()
+    origin_url = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=proj_dir,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
     # convert ssh to https
     if origin_url.startswith("git@"):
         origin_url = origin_url.replace(":", "/", 1)

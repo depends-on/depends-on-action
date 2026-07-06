@@ -21,7 +21,7 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.6
+    rev: v0.15.20
     hooks:
       # Run the linter with import sorting.
       - id: ruff
@@ -30,13 +30,13 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         args: ["--skip=dist/*"]
 
   - repo: https://github.com/jackdewinter/pymarkdown
-    rev: v0.9.33
+    rev: v0.9.38
     hooks:
       - id: pymarkdown
         args: ["-d", "md014,md013", "scan"]
