@@ -294,13 +294,18 @@ def extract_gitlab_change(base_url, change_url, branch, main_branch, repo):
     return repo
 
 
-def extract_github_change(main_url, pr_number, repo):
+def extract_github_change(main_url, pr_number, repo, fork_url=None, branch=None):
     "Extract the dependency by git cloning the repository in the right branch for the Pull request."
     clone_repo(main_url, repo)
-    command(
-        ["git", "fetch", "origin", f"pull/{pr_number}/head:{pr_number}"], cwd=repo
-    )
-    command(["git", "merge", pr_number, "--no-edit"], cwd=repo)
+    if fork_url and branch:
+        command(["git", "remote", "add", "fork", fork_url], cwd=repo)
+        command(["git", "fetch", "fork", branch], cwd=repo)
+        command(["git", "merge", "FETCH_HEAD", "--no-edit"], cwd=repo)
+    else:
+        command(
+            ["git", "fetch", "origin", f"pull/{pr_number}/head:{pr_number}"], cwd=repo
+        )
+        command(["git", "merge", pr_number, "--no-edit"], cwd=repo)
     return repo
 
 
